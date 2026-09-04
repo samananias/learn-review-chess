@@ -1,0 +1,244 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-04T00:00:00Z",
+  "title": "Design System: Learn Review Chess",
+  "extensions": {
+    "colorMeta": {
+      "clock-white": {
+        "role": "neutral",
+        "displayName": "Clock White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#18181b", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#fafafa"]
+      },
+      "carbon-black": {
+        "role": "neutral",
+        "displayName": "Carbon Black",
+        "canonical": "#0a0a0a",
+        "tonalRamp": ["#0a0a0a", "#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8"]
+      },
+      "scoresheet": {
+        "role": "neutral",
+        "displayName": "Scoresheet",
+        "canonical": "#fafafa",
+        "tonalRamp": ["#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#fafafa"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#171717",
+        "tonalRamp": ["#0a0a0a", "#171717", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#e4e4e7"]
+      },
+      "chalk": {
+        "role": "neutral",
+        "displayName": "Chalk",
+        "canonical": "#ededed",
+        "tonalRamp": ["#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#ededed", "#fafafa"]
+      },
+      "charcoal": {
+        "role": "neutral",
+        "displayName": "Charcoal",
+        "canonical": "#18181b",
+        "tonalRamp": ["#0a0a0a", "#18181b", "#27272a", "#3f3f46", "#71717a", "#a1a1aa", "#d4d4d8", "#fafafa"]
+      },
+      "slate-board": {
+        "role": "neutral",
+        "displayName": "Slate Board",
+        "canonical": "#3f3f46",
+        "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#fafafa"]
+      },
+      "steel": {
+        "role": "neutral",
+        "displayName": "Steel",
+        "canonical": "#52525b",
+        "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#fafafa"]
+      },
+      "mist": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#a1a1aa",
+        "tonalRamp": ["#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#fafafa"]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgba(0,0,0,0.12)"
+      },
+      "hairline-faint": {
+        "role": "neutral",
+        "displayName": "Hairline Faint",
+        "canonical": "rgba(0,0,0,0.08)"
+      },
+      "hairline-dark": {
+        "role": "neutral",
+        "displayName": "Hairline Dark",
+        "canonical": "rgba(255,255,255,0.2)"
+      },
+      "hairline-faint-dark": {
+        "role": "neutral",
+        "displayName": "Hairline Faint Dark",
+        "canonical": "rgba(255,255,255,0.145)"
+      },
+      "hover-wash": {
+        "role": "neutral",
+        "displayName": "Hover Wash",
+        "canonical": "rgba(0,0,0,0.04)"
+      },
+      "hover-wash-dark": {
+        "role": "neutral",
+        "displayName": "Hover Wash Dark",
+        "canonical": "rgba(255,255,255,0.08)"
+      },
+      "track-wash": {
+        "role": "neutral",
+        "displayName": "Track Wash",
+        "canonical": "rgba(0,0,0,0.06)"
+      },
+      "flag-fall": {
+        "role": "primary",
+        "displayName": "Flag-Fall Red",
+        "canonical": "#ef4444",
+        "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5"]
+      },
+      "flag-fall-bg": { "role": "primary", "displayName": "Flag-Fall Background", "canonical": "#fef2f2" },
+      "flag-fall-text": { "role": "primary", "displayName": "Flag-Fall Text", "canonical": "#b91c1c" },
+      "flag-fall-bg-dark": { "role": "primary", "displayName": "Flag-Fall Background Dark", "canonical": "#450a0a" },
+      "flag-fall-text-dark": { "role": "primary", "displayName": "Flag-Fall Text Dark", "canonical": "#fca5a5" },
+      "brilliant-cyan": { "role": "primary", "displayName": "Brilliant Cyan", "canonical": "#22d3ee" },
+      "great-indigo": { "role": "primary", "displayName": "Great Indigo", "canonical": "#818cf8" },
+      "best-green": { "role": "primary", "displayName": "Best Green", "canonical": "#22c55e" },
+      "excellent-teal": { "role": "primary", "displayName": "Excellent Teal", "canonical": "#14b8a6" },
+      "good-yellow": { "role": "primary", "displayName": "Good Yellow", "canonical": "#eab308" },
+      "missed-win-fuchsia": { "role": "primary", "displayName": "Missed Win Fuchsia", "canonical": "#d946ef" },
+      "inaccuracy-orange": { "role": "primary", "displayName": "Inaccuracy Orange", "canonical": "#f97316" },
+      "blunder-red": { "role": "primary", "displayName": "Blunder Red", "canonical": "#991b1b" },
+      "unclassified-slate": { "role": "primary", "displayName": "Unclassified Slate", "canonical": "#64748b" },
+      "arrow-first": { "role": "primary", "displayName": "Arrow First", "canonical": "#22c55e" },
+      "arrow-second": { "role": "primary", "displayName": "Arrow Second", "canonical": "#3b82f6" },
+      "arrow-third": { "role": "primary", "displayName": "Arrow Third", "canonical": "#a855f7" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "App title in the header; one per page." },
+      "headline": { "displayName": "Headline", "purpose": "Panel titles such as game performance and explanation panels." },
+      "title": { "displayName": "Title", "purpose": "Section titles like \"Game review\" and intro copy." },
+      "body": { "displayName": "Body", "purpose": "The workhorse: UI copy, metadata, buttons, labels." },
+      "label": { "displayName": "Label", "purpose": "Helper text, file metadata, small annotations." },
+      "mono": { "displayName": "Mono", "purpose": "SAN move lists, classification counts, timestamps." }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "transition-colors",
+        "value": "background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "The only transition in the system: tonal state changes on controls."
+      },
+      {
+        "name": "tooltip-fade",
+        "value": "opacity 150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Evaluation graph SAN tooltip and hover labels."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The only button style in the system — an outlined rectangle with hairline border and tonal hover wash.",
+      "html": "<button class=\"ds-btn\">Load game</button>",
+      "css": ".ds-btn { background: #ffffff; color: #171717; padding: 6px 12px; font-family: Geist, Arial, sans-serif; font-size: 0.875rem; font-weight: 500; border: 1px solid rgba(0,0,0,0.12); border-radius: 6px; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn:hover { background: rgba(0,0,0,0.04); } .ds-btn:focus-visible { outline: 2px solid #171717; outline-offset: 2px; } .ds-btn:disabled { opacity: 0.5; cursor: not-allowed; } @media (prefers-color-scheme: dark) { .ds-btn { background: #0a0a0a; color: #ededed; border-color: rgba(255,255,255,0.2); } .ds-btn:hover { background: rgba(255,255,255,0.08); } .ds-btn:focus-visible { outline-color: #ededed; } }"
+    },
+    {
+      "name": "Primary Nav Tab (active)",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Tab row in the header band; active tab carries a 2px ink underline flush with the band border.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\" class=\"ds-tab ds-tab-active\">Review</a><a href=\"#\" class=\"ds-tab\">Learn</a><a href=\"#\" class=\"ds-tab\">Analysis</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 8px; } .ds-tab { display: inline-block; padding: 12px; font-family: Geist, Arial, sans-serif; font-size: 0.875rem; font-weight: 500; color: #52525b; border-bottom: 2px solid transparent; text-decoration: none; transition: color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-tab:hover { color: #171717; } .ds-tab-active { color: #171717; font-weight: 600; border-bottom-color: #171717; } @media (prefers-color-scheme: dark) { .ds-tab { color: #a1a1aa; } .ds-tab:hover { color: #ededed; } .ds-tab-active { color: #ededed; border-bottom-color: #ededed; } }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-text",
+      "description": "Hairline-bordered field with keyboard-visible focus outline; errors pair with the flag-fall banner and aria-invalid.",
+      "html": "<input class=\"ds-input\" placeholder=\"Paste a completed PGN game\" />",
+      "css": ".ds-input { width: 100%; box-sizing: border-box; background: #ffffff; color: #171717; padding: 8px; font-family: Geist, Arial, sans-serif; font-size: 0.875rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 6px; } .ds-input:focus-visible { outline: 2px solid #171717; outline-offset: 2px; } @media (prefers-color-scheme: dark) { .ds-input { background: #0a0a0a; color: #ededed; border-color: rgba(255,255,255,0.2); } .ds-input:focus-visible { outline-color: #ededed; } }"
+    },
+    {
+      "name": "Panel / Card",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Sidebar and content panels: 8px radius, faint hairline border, 20px padding, no shadow.",
+      "html": "<div class=\"ds-panel\"><h3 class=\"ds-panel-title\">Game review</h3><p class=\"ds-panel-body\">Import a completed game to begin reviewing.</p></div>",
+      "css": ".ds-panel { background: #ffffff; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 20px; font-family: Geist, Arial, sans-serif; } .ds-panel-title { margin: 0; font-size: 1rem; font-weight: 600; color: #171717; } .ds-panel-body { margin: 12px 0 0; font-size: 0.875rem; line-height: 1.43; color: #52525b; } @media (prefers-color-scheme: dark) { .ds-panel { background: #0a0a0a; border-color: rgba(255,255,255,0.145); } .ds-panel-title { color: #ededed; } .ds-panel-body { color: #a1a1aa; } }"
+    },
+    {
+      "name": "Progress Bar",
+      "kind": "custom",
+      "refersTo": "progress-track",
+      "description": "Determinate analysis progress: 8px fully-rounded track with solid ink fill; always paired with live announcements.",
+      "html": "<div class=\"ds-progress\" role=\"progressbar\" aria-valuenow=\"62\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"ds-progress-fill\" style=\"width: 62%\"></div></div>",
+      "css": ".ds-progress { height: 8px; width: 100%; overflow: hidden; border-radius: 9999px; background: rgba(0,0,0,0.06); } .ds-progress-fill { height: 100%; border-radius: 9999px; background: #171717; } @media (prefers-color-scheme: dark) { .ds-progress { background: rgba(255,255,255,0.08); } .ds-progress-fill { background: #ededed; } }"
+    },
+    {
+      "name": "Error Banner",
+      "kind": "custom",
+      "refersTo": "error-banner",
+      "description": "Flag-fall red validation banner with role=alert; the only saturated surface outside classification.",
+      "html": "<p class=\"ds-error\" role=\"alert\">PGN input is too long. Paste a completed game of reasonable size.</p>",
+      "css": ".ds-error { margin: 0; padding: 8px; background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 6px; font-family: Geist, Arial, sans-serif; font-size: 0.875rem; } @media (prefers-color-scheme: dark) { .ds-error { background: #450a0a; color: #fca5a5; border-color: #991b1b; } }"
+    },
+    {
+      "name": "Move Classification Badge",
+      "kind": "chip",
+      "refersTo": "classification-badges",
+      "description": "Verdict chip: classification color plus glyph, so the signal survives without color.",
+      "html": "<span class=\"ds-class ds-class-brilliant\">!!</span><span class=\"ds-class ds-class-mistake\">?</span><span class=\"ds-class ds-class-blunder\">??</span>",
+      "css": ".ds-class { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; font-family: Geist Mono, monospace; font-size: 0.75rem; font-weight: 700; color: #ffffff; } .ds-class-brilliant { background: #22d3ee; color: #083344; } .ds-class-mistake { background: #ef4444; } .ds-class-blunder { background: #991b1b; }"
+    },
+    {
+      "name": "SAN Tooltip Chip",
+      "kind": "custom",
+      "refersTo": "evaluation-graph",
+      "description": "Inverted charcoal chip used for graph hover labels — ink-on-white surfaces and white-on-ink fields.",
+      "html": "<span class=\"ds-san\">Nf3</span>",
+      "css": ".ds-san { display: inline-block; padding: 2px 6px; background: #18181b; color: #fafafa; border-radius: 4px; font-family: Geist, Arial, sans-serif; font-size: 0.75rem; font-weight: 500; opacity: 0; transition: opacity 150ms cubic-bezier(0.4,0,0.2,1); } .ds-san:hover { opacity: 1; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Analyst's Bench",
+    "overview": "The interface is a measurement bench for a chess player's play. Every surface is an instrument readout: neutral, calm, and precise, with the chessboard and the evaluation graph as the only visual events on screen. Chrome — buttons, panels, inputs, navigation — recedes into a monochrome vocabulary of ink lines and hairline borders so that nothing competes with the position under review.\n\nColor is never decoration. The entire surrounding UI is black-and-white with tonal alpha washes; the only saturated pixels on screen are meaning: the nine move-classification colors, the three engine-candidate arrow colors, and the error banner. A visitor reads the interface the way they read a scoresheet — quiet paper, honest numbers.\n\nDepth does not exist as shadow. Hierarchy is produced by hairline borders, tonal layering, and spacing rhythm alone.",
+    "keyCharacteristics": [
+      "Flat, border-driven monochrome chrome with dual light/dark themes of equal weight (white surfaces + ink text ↔ carbon-black surfaces + chalk text)",
+      "One type family (Geist) in a tight, small scale — body copy is 14px, everything denser",
+      "Restrained outlined controls: rectangles with 6px radius, hairline borders, 4–8% alpha hover washes",
+      "Semantic color reserved for move classification, engine arrows, and errors",
+      "Signature instrument: the charcoal evaluation graph (zinc-700 field, white/black advantage regions)"
+    ],
+    "rules": [
+      { "name": "The Ink Rule", "body": "Chrome is monochrome. Saturated color appears only where it means something: move classification, engine arrows, and errors. If a new element is decorative, it gets ink, not color.", "section": "colors" },
+      { "name": "The Twin Theme Rule", "body": "Every light-mode choice has a same-weight dark counterpart (white ↔ carbon-black, ink ↔ chalk, hairline ↔ hairline-dark). No surface ships in one theme only.", "section": "colors" },
+      { "name": "The Scale Discipline Rule", "body": "The type scale has exactly five steps (12/14/16/18/24px). Nothing in the chrome gets larger than 24px; if hierarchy is missing, add weight, not size.", "section": "typography" },
+      { "name": "The Hairline Rule", "body": "Every surface boundary is a 1px alpha border, never a shadow. If something needs to lift, it gets a stronger border or a wash — not elevation.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do pair every color decision with its dark-mode twin (bg-white/text-black ↔ dark:bg-black/dark:text-zinc-50, hairline ↔ hairline-dark). Unilateral theming is a defect.",
+      "Do use the alpha hairline pair for all borders: rgba(0,0,0,0.12) / rgba(255,255,255,0.2) interactive, .08/.145 for page bands.",
+      "Do show state with tonal washes (rgba(0,0,0,0.04) / rgba(255,255,255,0.08)) and transition-colors only.",
+      "Do keep body copy at 14px and reserve 12px for helpers; use Geist Mono for move data.",
+      "Do give every status a non-color channel: glyphs on classification badges, role=status/aria-live text beside the progress bar, aria-invalid on errored fields.",
+      "Do align review-column elements to the shared max-w-2xl (672px) edge so board and graph read as one instrument."
+    ],
+    "donts": [
+      "Don't use drop shadows, glows, or gradients for depth — the system is flat by doctrine.",
+      "Don't introduce saturated color into chrome (buttons, panels, nav, headings). Color is for classification, engine arrows, and errors only.",
+      "Don't create a filled \"primary\" button — all actions share the outlined secondary style.",
+      "Don't encode evaluation or verdicts in color alone; always pair with the glyph or text.",
+      "Don't exceed the five-step type scale or decorate type with color; hierarchy is weight and size.",
+      "Don't round anything past 8px except genuinely circular elements (progress bar, markers)."
+    ]
+  }
+}

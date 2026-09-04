@@ -47,7 +47,6 @@ test-results/
 blob-report/
 
 # Markdown: ignore new docs by default, keep load-bearing ones
-*.md
 !README.md
 !AGENTS.md
 !CLAUDE.md
