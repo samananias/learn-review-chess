@@ -26,6 +26,10 @@ const SHORT_GAME = [
 
 const NO_HEADERS_GAME = "1. e4 e5 2. Nf3 Nc6 *";
 
+function openImportOptions() {
+  fireEvent.click(screen.getByRole("button", { name: "Import another game" }));
+}
+
 const CHESSCOM_PGN = '[Event "Online"]\n[White "Alice"]\n[Black "Bob"]\n[Result "1-0"]\n\n1. e4 e5 *';
 
 describe("ReviewWorkspace", () => {
@@ -149,6 +153,7 @@ describe("ReviewWorkspace", () => {
       screen.getByRole("region", { name: "Review chessboard" })
     ).toBeInTheDocument();
 
+    openImportOptions();
     fireEvent.change(
       screen.getByRole("textbox", { name: "Paste a completed PGN game" }),
       { target: { value: "not valid pgn" } }
@@ -171,6 +176,7 @@ describe("ReviewWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByTestId("review-ply-count")).toHaveTextContent("(1 / 4)");
 
+    openImportOptions();
     const replacement = ['[Event "Two"]', "1. d4 d5 *"].join("\n");
     fireEvent.change(
       screen.getByRole("textbox", { name: "Paste a completed PGN game" }),
@@ -345,6 +351,7 @@ describe("ReviewWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(screen.getByTestId("review-ply-count")).toHaveTextContent("(1 / 4)");
 
+    openImportOptions();
     fireEvent.click(screen.getByRole("button", { name: "Paste PGN" }));
     expect(
       screen.getByRole("region", { name: "Review chessboard" })
@@ -380,6 +387,7 @@ describe("ReviewWorkspace", () => {
       screen.getByRole("region", { name: "Review chessboard" })
     ).toBeInTheDocument();
 
+    openImportOptions();
     await act(async () => {
       capturedOnSelectPgn?.("not valid pgn");
     });
@@ -427,7 +435,9 @@ describe("ReviewWorkspace", () => {
       "aria-pressed",
       "true"
     );
-    expect(textbox).toHaveValue("");
+    expect(
+      screen.getByRole("textbox", { name: "Paste a completed PGN game" })
+    ).toHaveValue("");
   });
 
   describe("file upload import method", () => {
@@ -527,6 +537,7 @@ describe("ReviewWorkspace", () => {
         screen.getByRole("region", { name: "Review chessboard" })
       ).toBeInTheDocument();
 
+      openImportOptions();
       fireEvent.click(screen.getByRole("button", { name: "Upload file" }));
       expect(
         screen.getByRole("region", { name: "Review chessboard" })
@@ -614,7 +625,9 @@ describe("ReviewWorkspace", () => {
         resolveRead(SHORT_GAME);
       });
 
-      expect(input).not.toBeDisabled();
+      expect(
+        screen.getByLabelText(/upload/i)
+      ).not.toBeDisabled();
     });
 
     it("removes the busy status element and displays the error alert when reading fails", async () => {
@@ -793,7 +806,9 @@ describe("ReviewWorkspace", () => {
         await new Promise((r) => setTimeout(r, 0));
       });
 
-      expect(fileInput).toHaveAttribute("aria-busy", "false");
+      expect(
+        screen.getByLabelText(/Upload a PGN file/i)
+      ).toHaveAttribute("aria-busy", "false");
     });
 
     it("the file-reading status paragraph carries aria-live=\"polite\"", async () => {
@@ -934,6 +949,7 @@ describe("ReviewWorkspace", () => {
 
       expect(screen.getByRole("region", { name: "Review chessboard" })).toBeInTheDocument();
 
+      openImportOptions();
       fireEvent.click(screen.getByRole("button", { name: "Upload file" }));
       fireEvent.click(screen.getByRole("button", { name: "Lichess" }));
       fireEvent.click(screen.getByRole("button", { name: "Paste PGN" }));

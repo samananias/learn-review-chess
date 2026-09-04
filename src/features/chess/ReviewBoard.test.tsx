@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, within } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReviewTimeline } from "@/features/chess/timeline";
@@ -213,10 +213,12 @@ describe("ReviewBoard", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders evaluation graph wrapper div with mt-6 class", () => {
+  it("renders the evaluation graph inside the review graph block", () => {
     const { container } = render(<ReviewBoard timeline={timelineOf(SHORT_GAME)} />);
     const graph = container.querySelector('[data-testid="evaluation-graph"]');
-    expect(graph?.parentElement?.getAttribute("class")).toBe("mt-6 w-full max-w-2xl");
+    expect(graph?.parentElement?.getAttribute("class")).toBe(
+      "review-graph-block w-full max-w-2xl"
+    );
   });
 
   it("starts at ply 0 with the start position label", () => {
@@ -505,13 +507,14 @@ describe("ReviewBoard", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("passes controlsHost to FullGameAnalysisPanel", () => {
+    it("renders FullGameAnalysisPanel without a portal host inside the review rail", () => {
       render(<ReviewBoard timeline={timelineOf(SHORT_GAME)} />);
-      expect(mockFullGameAnalysisPanel).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          controlsHost: expect.any(HTMLDivElement),
-        })
-      );
+      const lastCall = mockFullGameAnalysisPanel.mock.lastCall?.[0] as
+        | { controlsHost?: unknown }
+        | undefined;
+      expect(lastCall?.controlsHost ?? null).toBeNull();
+      const rail = screen.getByRole("complementary", { name: "Review rail" });
+      expect(rail).toBeInTheDocument();
     });
 
     it("renders the move list with exact button count and accessible names", () => {
@@ -976,23 +979,16 @@ describe("ReviewBoard", () => {
     });
   });
 
-  describe("analysis controls host", () => {
-    it("renders analysis-controls-host inside Timeline navigation", () => {
+  describe("review rail", () => {
+    it("renders the explanation and analysis inside the review rail", () => {
       render(<ReviewBoard timeline={timelineOf(SHORT_GAME)} />);
-      const host = screen.getByTestId("analysis-controls-host");
-      expect(host).toBeInTheDocument();
-      expect(host.closest('[role="group"]')).toHaveAttribute("aria-label", "Timeline navigation");
+      const rail = screen.getByRole("complementary", { name: "Review rail" });
+      expect(
+        within(rail).getByRole("region", { name: "Move explanation" })
+      ).toBeInTheDocument();
+      expect(mockFullGameAnalysisPanel).toHaveBeenCalled();
     });
-
-    it("analysis-controls-host is rendered after the Flip board button", () => {
-      render(<ReviewBoard timeline={timelineOf(SHORT_GAME)} />);
-      const group = screen.getByRole("group", { name: "Timeline navigation" });
-      const children = Array.from(group.children);
-      const flipIndex = children.findIndex((child) => child.textContent?.trim() === "Flip board");
-      const hostIndex = children.findIndex((child) => child.getAttribute("data-testid") === "analysis-controls-host");
-      expect(flipIndex).toBeGreaterThanOrEqual(0);
-      expect(hostIndex).toBeGreaterThan(flipIndex);
-    });
+  });
 
   it("the board shows the game position when not exploring", () => {
     render(<ReviewBoard timeline={timelineOf(SHORT_GAME)} />);
@@ -1075,7 +1071,6 @@ describe("ReviewBoard", () => {
     expect(screen.getByTestId("explorer-breadcrumb")).toHaveTextContent(
       "Exploring from the game position"
     );
-  });
   });
 
   describe("engine arrows", () => {

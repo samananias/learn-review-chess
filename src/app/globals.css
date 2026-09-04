@@ -26,3 +26,55 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Review surface: board first on mobile; board/graph/performance left and a
+   sticky review rail right from lg. DOM order (board, rail, graph, perf,
+   import) doubles as the mobile stacking order. */
+.review-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+.review-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-self: start;
+}
+
+@media (min-width: 1024px) {
+  .review-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-areas:
+      "board rail"
+      "graph rail"
+      "perf rail"
+      "import rail";
+    align-items: start;
+  }
+
+  .review-board-block {
+    grid-area: board;
+  }
+
+  .review-rail {
+    grid-area: rail;
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+  }
+
+  .review-graph-block {
+    grid-area: graph;
+  }
+
+  .review-perf-block {
+    grid-area: perf;
+  }
+
+  .review-import-block {
+    grid-area: import;
+  }
+}

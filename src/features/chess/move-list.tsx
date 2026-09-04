@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { ReviewTimeline } from "./timeline";
 import type { MoveClassification } from "./move-classification";
 import { ClassificationIcon } from "./classification-icon";
@@ -16,6 +17,8 @@ export function MoveList({
   onSelectPly,
   classifications,
 }: MoveListProps): React.ReactElement | null {
+  const listRef = useRef<HTMLOListElement>(null);
+
   const moves: { readonly ply: number; readonly label: string; readonly isCurrent: boolean }[] = [];
 
   for (const step of timeline.steps) {
@@ -32,20 +35,39 @@ export function MoveList({
     });
   }
 
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof list.scrollTo !== "function") {
+      return;
+    }
+    const current = list.querySelector<HTMLElement>('[aria-current="true"]');
+    if (!current) {
+      return;
+    }
+    const target =
+      current.offsetLeft - list.clientWidth / 2 + current.offsetWidth / 2;
+    list.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
+  }, [currentPly]);
+
   if (moves.length === 0) {
     return null;
   }
 
   return (
-    <ol className="flex flex-wrap gap-2" aria-label="Move list">
+    <ol
+      ref={listRef}
+      data-testid="move-strip"
+      className="flex gap-1 overflow-x-auto pb-1"
+      aria-label="Move list"
+    >
       {moves.map(({ ply, label, isCurrent }) => (
-        <li key={ply}>
+        <li key={ply} className="shrink-0">
           <button
             type="button"
             data-ply={ply}
             aria-current={isCurrent ? "true" : undefined}
             onClick={() => onSelectPly(ply)}
-            className={`inline-flex items-center rounded px-1.5 py-0.5 text-sm transition-colors ${
+            className={`inline-flex items-center gap-1 whitespace-nowrap rounded px-1.5 py-0.5 text-sm transition-colors ${
               isCurrent
                 ? "bg-black font-medium text-white dark:bg-white dark:text-black"
                 : "text-black hover:bg-black/[.06] dark:text-zinc-50 dark:hover:bg-white/[.08]"

@@ -86,17 +86,15 @@ export function buildPerformance(
 
 export default function ReviewBoard({
   timeline,
+  children,
 }: {
   timeline: ReviewTimeline;
+  children?: React.ReactNode;
 }) {
   const [ply, setPly] = useState(0);
   const [orientation, setOrientation] = useState<"white" | "black">("white");
-  const [controlsHost, setControlsHost] = useState<HTMLDivElement | null>(null);
   const [explorer, setExplorer] = useState<ExplorerStack | null>(null);
   const [criticalSelection, setCriticalSelection] = useState<readonly CriticalPosition[] | null>(null);
-  const setControlsHostRef = useCallback((node: HTMLDivElement | null) => {
-    setControlsHost(node);
-  }, []);
   const [lastIdentity, setLastIdentity] = useState(() =>
     timelineIdentity(timeline)
   );
@@ -234,150 +232,148 @@ export default function ReviewBoard({
         : "Position";
 
   return (
-    <div className="flex flex-col gap-4">
-      <div
-        role="status"
-        aria-live="polite"
-        className="flex items-center justify-between text-sm font-medium text-black dark:text-zinc-50"
-      >
-        <div>
-          <span data-testid="review-ply-status">
-            {ply === 0 ? "Start position" : statusText}
-          </span>{" "}
-          <span data-testid="review-ply-count">
-            ({ply} / {timeline.totalPlies})
-          </span>
-        </div>
-        <OpeningDisplay opening={opening} />
-      </div>
-
-      <MoveList timeline={timeline} currentPly={ply} onSelectPly={goTo} classifications={classifications} />
-
-      <div
-        role="group"
-        aria-label="Timeline navigation"
-        className="flex flex-wrap gap-2"
-      >
-        <button
-          type="button"
-          onClick={handleStart}
-          disabled={atStart}
-          className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
-        >
-          Start
-        </button>
-        <button
-          type="button"
-          onClick={handlePrevious}
-          disabled={atStart}
-          className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
-        >
-          Previous
-        </button>
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={atEnd}
-          className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
-        >
-          Next
-        </button>
-        <button
-          type="button"
-          onClick={handleEnd}
-          disabled={atEnd}
-          className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
-        >
-          End
-        </button>
-        <button
-          type="button"
-          onClick={handleFlip}
-          className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
-        >
-          Flip board
-        </button>
+    <div className="review-layout">
+      <div className="review-board-block flex min-w-0 flex-col gap-4">
         <div
-          className="contents"
-          data-testid="analysis-controls-host"
-          ref={setControlsHostRef}
+          role="status"
+          aria-live="polite"
+          className="flex items-center justify-between text-sm font-medium text-black dark:text-zinc-50"
+        >
+          <div>
+            <span data-testid="review-ply-status">
+              {ply === 0 ? "Start position" : statusText}
+            </span>{" "}
+            <span data-testid="review-ply-count">
+              ({ply} / {timeline.totalPlies})
+            </span>
+          </div>
+          <OpeningDisplay opening={opening} />
+        </div>
+
+        <MoveList timeline={timeline} currentPly={ply} onSelectPly={goTo} classifications={classifications} />
+
+        <div
+          role="group"
+          aria-label="Timeline navigation"
+          className="flex flex-wrap gap-2"
+        >
+          <button
+            type="button"
+            onClick={handleStart}
+            disabled={atStart}
+            className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
+          >
+            Start
+          </button>
+          <button
+            type="button"
+            onClick={handlePrevious}
+            disabled={atStart}
+            className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={atEnd}
+            className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
+          >
+            Next
+          </button>
+          <button
+            type="button"
+            onClick={handleEnd}
+            disabled={atEnd}
+            className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
+          >
+            End
+          </button>
+          <button
+            type="button"
+            onClick={handleFlip}
+            className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
+          >
+            Flip board
+          </button>
+        </div>
+
+        <div className="flex w-full max-w-2xl items-stretch gap-3">
+          <div
+            className="aspect-square w-full max-w-2xl overflow-hidden rounded-lg border border-black/[.15] dark:border-white/[.2]"
+          >
+            <section aria-label="Review chessboard" className="h-full w-full">
+               <Chessboard
+                options={{
+                  id: "review",
+                  position: displayedFen,
+                  boardOrientation: orientation,
+                  allowDragging: true,
+                  onPieceDrop: handlePieceDrop,
+                  arrows: [...positionAnalysis.arrows],
+                  clearArrowsOnPositionChange: true,
+                  animationDurationInMs: 150,
+                }}
+              />
+            </section>
+          </div>
+          <EvaluationBar point={currentGraphPoint} orientation={orientation} />
+        </div>
+
+        {positionAnalysis.arrows.length > 0 && (
+          <div
+            data-testid="arrow-legend"
+            aria-label="Engine suggestion legend"
+            className="flex flex-wrap gap-3 text-sm font-medium text-black dark:text-zinc-50"
+          >
+            {positionAnalysis.arrows.slice(0, 3).map((arrow, index) => {
+              const label =
+                index === 0
+                  ? "Best"
+                  : index === 1
+                    ? "2nd best"
+                    : "3rd best";
+              const swatchColor =
+                index === 0
+                  ? ARROW_COLORS.first
+                  : index === 1
+                    ? ARROW_COLORS.second
+                    : ARROW_COLORS.third;
+
+              return (
+                <div
+                  key={index}
+                  data-testid="arrow-legend-item"
+                  className="flex items-center gap-2"
+                >
+                  <span
+                    aria-hidden
+                    className="inline-block h-3 w-3 rounded-sm"
+                    style={{ backgroundColor: swatchColor }}
+                  />
+                  {label}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <ExplorerPanel
+          stack={explorer ?? createExplorerStack({ ply, fen })}
+          onBack={() =>
+            setExplorer((prev) =>
+              prev === null ? null : popExplorerPosition(prev)
+            )
+          }
+          onReset={() => setExplorer(null)}
         />
       </div>
 
-      <div className="flex w-full max-w-2xl items-stretch gap-3">
-        <div
-          className="aspect-square w-full max-w-2xl overflow-hidden rounded-lg border border-black/[.15] dark:border-white/[.2]"
-        >
-          <section aria-label="Review chessboard" className="h-full w-full">
-             <Chessboard
-              options={{
-                id: "review",
-                position: displayedFen,
-                boardOrientation: orientation,
-                allowDragging: true,
-                onPieceDrop: handlePieceDrop,
-                arrows: [...positionAnalysis.arrows],
-                clearArrowsOnPositionChange: true,
-                animationDurationInMs: 150,
-              }}
-            />
-          </section>
-        </div>
-        <EvaluationBar point={currentGraphPoint} orientation={orientation} />
-      </div>
-
-      {positionAnalysis.arrows.length > 0 && (
-        <div
-          data-testid="arrow-legend"
-          aria-label="Engine suggestion legend"
-          className="flex flex-wrap gap-3 text-sm font-medium text-black dark:text-zinc-50"
-        >
-          {positionAnalysis.arrows.slice(0, 3).map((arrow, index) => {
-            const label =
-              index === 0
-                ? "Best"
-                : index === 1
-                  ? "2nd best"
-                  : "3rd best";
-            const swatchColor =
-              index === 0
-                ? ARROW_COLORS.first
-                : index === 1
-                  ? ARROW_COLORS.second
-                  : ARROW_COLORS.third;
-
-            return (
-              <div
-                key={index}
-                data-testid="arrow-legend-item"
-                className="flex items-center gap-2"
-              >
-                <span
-                  aria-hidden
-                  className="inline-block h-3 w-3 rounded-sm"
-                  style={{ backgroundColor: swatchColor }}
-                />
-                {label}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <ExplorerPanel
-        stack={explorer ?? createExplorerStack({ ply, fen })}
-        onBack={() =>
-          setExplorer((prev) =>
-            prev === null ? null : popExplorerPosition(prev)
-          )
-        }
-        onReset={() => setExplorer(null)}
-      />
-
-      <div className="mt-6 w-full max-w-2xl">
-        <EvaluationGraph points={graphPoints} currentPly={ply} onSelectPly={goTo} />
-      </div>
-      <div className="w-full max-w-2xl space-y-3">
+      <aside
+        aria-label="Review rail"
+        className="review-rail rounded-lg border border-black/[.08] bg-white p-5 dark:border-white/[.145] dark:bg-black"
+      >
+        <MoveExplanationPanel explanation={explanation} />
         {criticalSelection !== null && criticalSelection.length > 0 && (
           <div className="space-y-1">
             <button
@@ -404,15 +400,18 @@ export default function ReviewBoard({
           limit={FULL_GAME_ANALYSIS_LIMIT}
           multiPv={3}
           analysisState={analysisState}
-          controlsHost={controlsHost}
         />
+      </aside>
+
+      <div className="review-graph-block w-full max-w-2xl">
+        <EvaluationGraph points={graphPoints} currentPly={ply} onSelectPly={goTo} />
       </div>
-      <div className="w-full max-w-2xl">
+
+      <div className="review-perf-block w-full max-w-2xl">
         <GamePerformanceSummary performance={performance} />
       </div>
-      <div className="w-full max-w-2xl">
-        <MoveExplanationPanel explanation={explanation} />
-      </div>
+
+      <div className="review-import-block">{children}</div>
     </div>
   );
 }

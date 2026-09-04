@@ -49,6 +49,7 @@ export default function ReviewWorkspace() {
   const [activeSource, setActiveSource] = useState<string | null>(null);
   const [isFileReading, setIsFileReading] = useState(false);
   const [multiPgnGames, setMultiPgnGames] = useState<string[]>([]);
+  const [importOpen, setImportOpen] = useState(false);
   const [descriptionId] = useState("pgn-description");
   const [fileDescriptionId] = useState("file-description");
   const [errorId] = useState("pgn-error");
@@ -148,63 +149,13 @@ export default function ReviewWorkspace() {
     setMultiPgnGames([]);
   };
 
-  return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-      <section aria-label="Chess workspace">
-        {timeline ? <ReviewBoard timeline={timeline} /> : <StudyBoard />}
-      </section>
-
-      <aside
-        aria-label="Game review"
-        className="rounded-lg border border-black/[.08] bg-white p-5 dark:border-white/[.145] dark:bg-black"
+  const importPanelBody = (
+    <>
+      <div
+        className="grid w-full grid-cols-2 gap-2"
+        role="group"
+        aria-label="Import method"
       >
-        <h2 className="text-base font-semibold text-black dark:text-zinc-50">
-          Game review
-        </h2>
-
-        {timeline && summary ? (
-          <div className="mt-3 space-y-3">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              {summary.halfMoves} half-move
-              {summary.halfMoves === 1 ? "" : "s"} imported.
-            </p>
-            <dl className="space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
-              <div className="flex gap-2">
-                <dt className="font-medium">Source:</dt>
-                <dd>{activeSource ?? "Not specified"}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="font-medium">White:</dt>
-                <dd>{summary.white ?? "Not specified"}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="font-medium">Black:</dt>
-                <dd>{summary.black ?? "Not specified"}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="font-medium">Result:</dt>
-                <dd>{summary.result ?? "Not specified"}</dd>
-              </div>
-            </dl>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
-            >
-              Clear imported game
-            </button>
-          </div>
-        ) : (
-          <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-            Import a completed game to begin reviewing.
-          </p>
-        )}
-
-        <div
-          className="mt-5 grid w-full grid-cols-2 gap-2"
-          role="group"
-          aria-label="Import method"
-        >
           <button
             type="button"
             aria-pressed={importMethod === "paste"}
@@ -237,10 +188,10 @@ export default function ReviewWorkspace() {
           >
             Upload file
           </button>
-        </div>
+      </div>
 
-        {importMethod === "paste" && (
-          <form className="mt-4" onSubmit={handlePasteSubmit}>
+      {importMethod === "paste" && (
+          <form onSubmit={handlePasteSubmit}>
             <label
               htmlFor="pgn-input"
               className="block text-sm font-medium text-black dark:text-zinc-50"
@@ -271,20 +222,20 @@ export default function ReviewWorkspace() {
         )}
 
         {importMethod === "chesscom" && (
-          <div className="mt-4">
+          <div>
             <ChesscomGamePicker onSelectPgn={handleChesscomSelect} />
           </div>
         )}
 
         {importMethod === "lichess" && (
-          <div className="mt-4">
+          <div>
             <LichessGamePicker onSelectPgn={handleLichessSelect} />
           </div>
         )}
 
 
         {importMethod === "file" && (
-          <div className="mt-4">
+          <div>
             <label
               htmlFor="file-input"
               className="block text-sm font-medium text-black dark:text-zinc-50"
@@ -359,15 +310,94 @@ export default function ReviewWorkspace() {
           </div>
         )}
 
-        {error && (
-          <p
-            id={errorId}
-            role="alert"
-            className="mt-3 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
-          >
-            {error}
-          </p>
-        )}
+      {error && (
+        <p
+          id={errorId}
+          role="alert"
+          className="rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+        >
+          {error}
+        </p>
+      )}
+    </>
+  );
+
+  if (timeline && summary) {
+    return (
+      <ReviewBoard timeline={timeline}>
+        <div className="flex flex-col gap-3 rounded-lg border border-black/[.08] bg-white p-5 dark:border-white/[.145] dark:bg-black">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-black dark:text-zinc-50">
+              Game review
+            </h2>
+            <button
+              type="button"
+              aria-expanded={importOpen}
+              aria-controls="import-options"
+              onClick={() => setImportOpen((open) => !open)}
+              className="whitespace-nowrap rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
+            >
+              {importOpen ? "Hide import options" : "Import another game"}
+            </button>
+          </div>
+          <div className="space-y-3">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              {summary.halfMoves} half-move
+              {summary.halfMoves === 1 ? "" : "s"} imported.
+            </p>
+            <dl className="space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
+              <div className="flex gap-2">
+                <dt className="font-medium">Source:</dt>
+                <dd>{activeSource ?? "Not specified"}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="font-medium">White:</dt>
+                <dd>{summary.white ?? "Not specified"}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="font-medium">Black:</dt>
+                <dd>{summary.black ?? "Not specified"}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="font-medium">Result:</dt>
+                <dd>{summary.result ?? "Not specified"}</dd>
+              </div>
+            </dl>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
+            >
+              Clear imported game
+            </button>
+          </div>
+          <div id="import-options" hidden={!importOpen}>
+            {importPanelBody}
+          </div>
+        </div>
+      </ReviewBoard>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <section aria-label="Chess workspace">
+        {timeline ? <ReviewBoard timeline={timeline} /> : <StudyBoard />}
+      </section>
+
+      <aside
+        aria-label="Game review"
+        className="rounded-lg border border-black/[.08] bg-white p-5 dark:border-white/[.145] dark:bg-black"
+      >
+        <h2 className="text-base font-semibold text-black dark:text-zinc-50">
+          Game review
+        </h2>
+        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+          Import a completed game to begin reviewing.
+        </p>
+        <div className="mt-5 flex flex-col gap-4">
+          {importPanelBody}
+        </div>
       </aside>
     </div>
   );
