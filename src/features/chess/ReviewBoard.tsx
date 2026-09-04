@@ -379,18 +379,24 @@ export default function ReviewBoard({
       </div>
       <div className="w-full max-w-2xl space-y-3">
         {criticalSelection !== null && criticalSelection.length > 0 && (
-          <button
-            type="button"
-            onClick={() => {
-              if (criticalSelection) {
-                analysisState.startCriticalPass(criticalSelection, DEEP_PASS_LIMIT, 3);
-              }
-            }}
-            disabled={analysisState.status === "running"}
-            className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
-          >
-            Analyze critical moments
-          </button>
+          <div className="space-y-1">
+            <button
+              type="button"
+              onClick={() => {
+                if (criticalSelection) {
+                  analysisState.startCriticalPass(criticalSelection, DEEP_PASS_LIMIT, 3);
+                }
+              }}
+              disabled={analysisState.status === "running"}
+              className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
+            >
+              Analyze critical moments
+            </button>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">
+              Re-runs the engine deeper on the {criticalSelection.length} most
+              decisive moments of the game to refine their evaluation.
+            </p>
+          </div>
         )}
         <FullGameAnalysisPanel
           timeline={timeline}

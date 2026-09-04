@@ -5,6 +5,14 @@ import { createPortal } from "react-dom";
 import type { EngineAnalysisLimit, EngineScore } from "./engine";
 import type { ReviewTimeline } from "./timeline";
 import type { UseQuickPassAnalysis } from "./use-quick-pass-analysis";
+import {
+  analysisJobLabel,
+  describeEvaluation,
+  formatEngineLine,
+  formatSignedScore,
+  isCriticalPassJob,
+  sideToMoveFromFen,
+} from "./engine-presentation";
 
 type FullGameAnalysisPanelProps = {
   readonly timeline: ReviewTimeline;
@@ -20,13 +28,6 @@ function timelineIdentity(timeline: ReviewTimeline): string {
     .map((step) => `${step.ply}:${step.fen}:${step.move?.san ?? ""}`)
     .join("|");
   return `${timeline.initialFen}#${timeline.totalPlies}#${timeline.finalFen}#${timeline.analysisEligible}#${steps}`;
-}
-
-function formatScore(score: EngineScore): string {
-  if (score.type === "cp") {
-    return (score.value / 100).toFixed(2);
-  }
-  return `M${score.value}`;
 }
 
 type DisplayState = {
@@ -48,95 +49,98 @@ type QuickPassResult = {
   readonly candidateLines: readonly { readonly rank: number; readonly info: { readonly depth?: number; readonly score?: EngineScore; readonly nodes?: number; readonly timeMs?: number; readonly pv?: readonly string[] } }[];
 };
 
+function positionFenForPly(timeline: ReviewTimeline, ply: number): string | null {
+  return timeline.steps[ply]?.fen ?? null;
+}
+
 function CurrentPlyResult({
   currentResult,
-  currentPly,
+  timeline,
 }: {
   readonly currentResult: QuickPassResult;
-  readonly currentPly: number;
+  readonly timeline: ReviewTimeline;
 }) {
   const info = currentResult.info;
-  const bestMove = currentResult.bestMove;
   const candidateLines = currentResult.candidateLines;
+  const fen = positionFenForPly(timeline, currentResult.job.ply);
+  const sideToMove = sideToMoveFromFen(fen);
+
+  const evalSentence = info?.score
+    ? describeEvaluation(info.score, sideToMove)
+    : null;
+
+  const rankedLines = candidateLines
+    .slice()
+    .sort((a, b) => a.rank - b.rank);
+  const topLine = rankedLines[0] ?? null;
+  const otherLines = rankedLines.slice(1);
+
+  const suggestion =
+    topLine?.info.pv && topLine.info.pv.length > 0
+      ? formatEngineLine(fen, topLine.info.pv)
+      : info?.pv && info.pv.length > 0
+        ? formatEngineLine(fen, info.pv)
+        : null;
 
   return (
-    <div data-testid="current-ply-result" className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-      <div>
-        <span className="font-medium">Ply:</span> {currentPly}
-      </div>
+    <div
+      data-testid="current-ply-result"
+      data-ply={currentResult.job.ply}
+      className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300"
+    >
+      {evalSentence && (
+        <p
+          data-testid="eval-sentence"
+          className="font-medium text-black dark:text-zinc-50"
+        >
+          {evalSentence}
+        </p>
+      )}
 
-      {info && (
+      {suggestion && (
+        <p>
+          <span className="font-medium">Engine suggests:</span> {suggestion}
+        </p>
+      )}
+
+      {otherLines.length > 0 && (
         <div className="space-y-1">
-          {info.depth !== undefined && (
-            <div>
-              <span className="font-medium">Depth:</span> {info.depth}
+          <span className="font-medium">Also considered:</span>
+          {otherLines.map((line) => (
+            <div key={line.rank} data-testid="candidate-line" className="ml-2">
+              <span className="font-medium">{line.rank}.</span>
+              {line.info.score && (
+                <span>
+                  {" "}
+                  {formatSignedScore(line.info.score, sideToMove) ?? ""}
+                </span>
+              )}
+              {line.info.pv && line.info.pv.length > 0 && (
+                <span>
+                  {" "}
+                  — {formatEngineLine(fen, line.info.pv) ?? line.info.pv.join(" ")}
+                </span>
+              )}
             </div>
-          )}
-          {info.nodes !== undefined && (
-            <div>
-              <span className="font-medium">Nodes:</span>{" "}
-              {info.nodes.toLocaleString()}
-            </div>
-          )}
-          {info.timeMs !== undefined && (
-            <div>
-              <span className="font-medium">Time:</span>{" "}
-              {info.timeMs}ms
-            </div>
-          )}
-          {info.score && (
-            <div>
-              <span className="font-medium">Score:</span>{" "}
-              {formatScore(info.score)}
-            </div>
-          )}
-          {info.pv && info.pv.length > 0 && (
-            <div>
-              <span className="font-medium">Engine line:</span>{" "}
-              {info.pv.join(" ")}
-            </div>
-          )}
+          ))}
         </div>
       )}
 
-      {bestMove && (bestMove.move || bestMove.ponder) && (
-        <div>
-          <span className="font-medium">Best move:</span>{" "}
-          {bestMove.move}
-          {bestMove.ponder && (
-            <> (ponder: {bestMove.ponder})</>
-          )}
-        </div>
-      )}
-
-      {candidateLines.length > 0 && (
-        <div className="space-y-1">
-          <span className="font-medium">Candidate lines:</span>
-          {candidateLines
-            .slice()
-            .sort((a, b) => a.rank - b.rank)
-            .map((line, index) => (
-              <div key={index} className="ml-2">
-                <span className="font-medium">Rank {line.rank}:</span>
-                {line.info.score && (
-                  <span> Score: {formatScore(line.info.score)}</span>
-                )}
-                {line.info.depth !== undefined && (
-                  <span> Depth: {line.info.depth}</span>
-                )}
-                {line.info.nodes !== undefined && (
-                  <span> Nodes: {line.info.nodes.toLocaleString()}</span>
-                )}
-                {line.info.timeMs !== undefined && (
-                  <span> Time: {line.info.timeMs}ms</span>
-                )}
-                {line.info.pv && line.info.pv.length > 0 && (
-                  <div>Engine line: {line.info.pv.join(" ")}</div>
-                )}
-              </div>
-            ))}
-        </div>
-      )}
+      {info &&
+        (info.depth !== undefined ||
+          info.nodes !== undefined ||
+          info.timeMs !== undefined) && (
+          <details data-testid="engine-details" className="text-zinc-600 dark:text-zinc-400">
+            <summary className="cursor-pointer select-none text-sm">Engine details</summary>
+            <div className="ml-2 mt-1 space-y-0.5">
+              {info.depth !== undefined && <div>Search depth: {info.depth}</div>}
+              {info.nodes !== undefined && (
+                <div>Positions considered: {info.nodes.toLocaleString()}</div>
+              )}
+              {info.timeMs !== undefined && <div>Think time: {info.timeMs}ms</div>}
+            </div>
+          </details>
+        )}
     </div>
   );
 }
@@ -243,8 +247,12 @@ function FullGameAnalysisPanelEligible({
     (result) => result.job.ply === currentPly
   );
 
+  const jobLabel = analysisJobLabel(displayState.status === "running" ? currentJobId : null, timeline);
+  const jobVerb = isCriticalPassJob(currentJobId) ? "Re-checking" : "Analyzing";
   const progressText = isRunning
-    ? `Analyzing position ${currentJobId ?? "..."} (${completedJobs}/${totalJobs})`
+    ? jobLabel
+      ? `${jobVerb} ${jobLabel} (${completedJobs}/${totalJobs})`
+      : `${jobVerb} (${completedJobs}/${totalJobs})`
     : displayState.status === "completed"
       ? "Analysis complete."
       : displayState.status === "cancelled"
@@ -278,16 +286,20 @@ function FullGameAnalysisPanelEligible({
       <div role="status" aria-live="polite" className="text-sm text-zinc-600 dark:text-zinc-400">
         {progressText}
       </div>
+      <p className="text-xs text-zinc-600 dark:text-zinc-400">
+        Analysis runs locally in your browser — your game never leaves this device.
+      </p>
 
       {controlsHost ? createPortal(analysisControls, controlsHost) : analysisControls}
 
       {currentResult && (
-        <CurrentPlyResult currentResult={currentResult} currentPly={currentPly} />
+        <CurrentPlyResult currentResult={currentResult} timeline={timeline} />
       )}
 
       {!currentResult && displayState.status !== "loading" && (
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Position not yet analyzed.
+          This position has not been analyzed yet. Run the full-game analysis to
+          see its evaluation.
         </p>
       )}
     </section>

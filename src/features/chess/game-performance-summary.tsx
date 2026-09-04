@@ -9,6 +9,10 @@ import { CLASSIFICATION_LABELS } from "./classification-presentation";
 
 const PHASES: readonly GamePhase[] = ["opening", "middlegame", "endgame"];
 
+const VERDICTS = MOVE_CLASSIFICATION_ORDER.filter(
+  (classification) => classification !== "unclassified"
+);
+
 const PHASE_LABELS: Record<GamePhase, string> = {
   opening: "Opening",
   middlegame: "Middlegame",
@@ -89,7 +93,7 @@ function PlayerBlock({
                 className="flex items-center gap-2"
               >
                 <ClassificationIcon classification={classification} />
-                <span className="sr-only">{CLASSIFICATION_LABELS[classification]}</span>
+                <span className="text-xs">{CLASSIFICATION_LABELS[classification]}</span>
                 <span className="font-mono text-xs">({count})</span>
               </li>
             );
@@ -128,6 +132,22 @@ export function GamePerformanceSummary({
         testId="performance-black"
         player={performance.black}
       />
+      <details
+        data-testid="classification-glossary"
+        className="rounded-lg border border-black/[.12] p-4 text-sm text-black dark:border-white/[.2] dark:text-zinc-50"
+      >
+        <summary className="cursor-pointer select-none font-medium">
+          What the icons mean
+        </summary>
+        <ul className="mt-2 flex flex-col gap-1 pl-2">
+          {VERDICTS.map((classification) => (
+            <li key={classification} className="flex items-center gap-2">
+              <ClassificationIcon classification={classification} />
+              <span>{CLASSIFICATION_LABELS[classification]}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
     </section>
   );
 }

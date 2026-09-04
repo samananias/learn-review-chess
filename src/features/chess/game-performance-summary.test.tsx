@@ -194,7 +194,7 @@ describe("GamePerformanceSummary", () => {
     expect(blackBlock).not.toHaveTextContent("99.1%");
   });
 
-  it("exposes classification name to assistive technology via sr-only span", () => {
+  it("renders the classification name visibly next to the icon and count", () => {
     const perf = makeGamePerformance({
       counts: {
         brilliant: 0,
@@ -212,9 +212,28 @@ describe("GamePerformanceSummary", () => {
     render(<GamePerformanceSummary performance={perf} />);
     const whiteBlock = screen.getByTestId("performance-white");
     const countRow = whiteBlock.querySelector('[data-testid="count-row"]');
-    const srSpan = countRow?.querySelector(".sr-only");
-    expect(srSpan).toBeInTheDocument();
-    expect(srSpan).toHaveTextContent("Blunder");
+    expect(countRow?.querySelector(".sr-only")).toBeNull();
+    expect(countRow?.textContent).toContain("Blunder");
     expect(countRow).toHaveTextContent("(1)");
+  });
+
+  it("offers a glossary explaining every classification icon", () => {
+    const perf = makeGamePerformance({});
+    render(<GamePerformanceSummary performance={perf} />);
+    const glossary = screen.getByTestId("classification-glossary");
+    expect(glossary.textContent).toContain("What the icons mean");
+    for (const label of [
+      "Brilliant move",
+      "Great move",
+      "Best move",
+      "Excellent move",
+      "Good move",
+      "Missed Win",
+      "Inaccuracy",
+      "Mistake",
+      "Blunder",
+    ]) {
+      expect(glossary.textContent).toContain(label);
+    }
   });
 });

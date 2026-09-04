@@ -140,7 +140,7 @@ describe("FullGameAnalysisPanel", () => {
       rerender(<FullGameAnalysisPanel {...defaultProps} />);
     });
 
-    expect(screen.getByText("Analyzing position quick-pass-1 (2/5)")).toBeDefined();
+    expect(screen.getByText("Analyzing 1. e4 (2/5)")).toBeDefined();
   });
 
   it("running exposes Cancel and delegates once", () => {
@@ -199,8 +199,9 @@ describe("FullGameAnalysisPanel", () => {
 
     expect(screen.getByText("Analysis cancelled.")).toBeDefined();
     const resultContainer = screen.getByTestId("current-ply-result");
-    expect(resultContainer.textContent).toContain("Ply:");
-    expect(resultContainer.textContent).toContain("0");
+    expect(resultContainer.getAttribute("data-ply")).toBe("0");
+    // cp 30 from the side to move is a near-level position.
+    expect(resultContainer.textContent).toContain("The position is balanced");
   });
 
   it("error state renders the exact safe hook error", () => {
@@ -224,9 +225,11 @@ describe("FullGameAnalysisPanel", () => {
       rerender(<FullGameAnalysisPanel {...defaultProps} currentPly={1} />);
     });
     const resultContainer = screen.getByTestId("current-ply-result");
-    expect(resultContainer.textContent).toContain("Ply:");
-    expect(resultContainer.textContent).toContain("1");
-    expect(resultContainer.textContent).not.toContain("Ply: 0");
+    expect(resultContainer.getAttribute("data-ply")).toBe("1");
+    expect(screen.queryByTestId("current-ply-result")).not.toHaveAttribute(
+      "data-ply",
+      "0"
+    );
 
     act(() => {
       mockAnalysisState.results = [createResult(0)];
@@ -274,10 +277,10 @@ describe("FullGameAnalysisPanel", () => {
       rerender(<FullGameAnalysisPanel {...defaultProps} />);
     });
 
-    const rankElements = screen.getAllByText(/^Rank \d+:/);
-    expect(rankElements[0].textContent).toBe("Rank 1:");
-    expect(rankElements[1].textContent).toBe("Rank 2:");
-    expect(rankElements[2].textContent).toBe("Rank 3:");
+    const rankElements = screen.getAllByTestId("candidate-line");
+    expect(rankElements).toHaveLength(2);
+    expect(rankElements[0].textContent?.startsWith("2.")).toBe(true);
+    expect(rankElements[1].textContent?.startsWith("3.")).toBe(true);
   });
 
   it("missing ranks and optional fields are not fabricated", () => {
@@ -293,13 +296,14 @@ describe("FullGameAnalysisPanel", () => {
       rerender(<FullGameAnalysisPanel {...defaultProps} />);
     });
 
-    expect(screen.getByText("Rank 1:")).toBeDefined();
-    expect(screen.queryByText("Rank 2:")).toBeNull();
-    const candidateContainer = screen.getByText("Candidate lines:").closest("div");
-    expect(candidateContainer?.textContent).not.toContain("Score:");
+    expect(screen.getByText("Engine suggests:")).toBeDefined();
+    expect(screen.queryByText("Also considered:")).toBeNull();
+    expect(screen.queryByTestId("candidate-line")).toBeNull();
+    const resultContainer = screen.getByTestId("current-ply-result");
+    expect(resultContainer.textContent).not.toContain("Score:");
   });
 
-  it("best move and ponder render when present", () => {
+  it("best move renders as a SAN suggestion without ponder jargon", () => {
     const result = createResult(0);
     result.bestMove = { move: "e2e4", ponder: "e7e5" };
     const { rerender } = render(<FullGameAnalysisPanel {...defaultProps} />);
@@ -314,9 +318,10 @@ describe("FullGameAnalysisPanel", () => {
     });
 
     const resultContainer = screen.getByTestId("current-ply-result");
-    expect(resultContainer.textContent).toContain("Best move:");
-    expect(resultContainer.textContent).toContain("e2e4");
-    expect(resultContainer.textContent).toContain("ponder: e7e5");
+    expect(resultContainer.textContent).toContain("Engine suggests:");
+    expect(resultContainer.textContent).not.toContain("ponder");
+    expect(resultContainer.textContent).not.toContain("Ponder");
+    expect(screen.getByTestId("engine-details")).toBeDefined();
   });
 
   it("timeline replacement during running cancels once and hides old results", () => {
@@ -332,7 +337,7 @@ describe("FullGameAnalysisPanel", () => {
       mockAnalysisState.results = [createResult(0)];
       rerender(<FullGameAnalysisPanel {...defaultProps} timeline={timelineA} />);
     });
-    expect(screen.getByText(/Analyzing position/)).toBeDefined();
+    expect(screen.getByText(/Analyzing/)).toBeDefined();
 
     act(() => {
       rerender(<FullGameAnalysisPanel {...defaultProps} timeline={timelineB} />);
@@ -432,7 +437,7 @@ describe("FullGameAnalysisPanel", () => {
       rerender(<FullGameAnalysisPanel {...defaultProps} timeline={timeline} />);
     });
     expect(screen.queryByTestId("current-ply-result")).toBeNull();
-    expect(screen.getByText(/Analyzing position/)).toBeDefined();
+    expect(screen.getByText(/Analyzing/)).toBeDefined();
 
     act(() => {
       mockAnalysisState.results = [createResult(0)];
@@ -618,7 +623,33 @@ describe("FullGameAnalysisPanel", () => {
         }}
       />
     );
-    expect(screen.getByText("Analyzing position ... (7/40)")).toBeDefined();
+    expect(screen.getByText("Analyzing (7/40)")).toBeDefined();
     expect(screen.getAllByRole("status")).toHaveLength(1);
+  });
+
+  it("renders the evaluation as a plain-language sentence from White's perspective", () => {
+    const { rerender } = render(<FullGameAnalysisPanel {...defaultProps} />);
+    act(() => {
+      screen.getByRole("button", { name: "Analyze full game" }).click();
+    });
+
+    act(() => {
+      mockAnalysisState.status = "completed";
+      mockAnalysisState.results = [createResult(0)];
+      rerender(<FullGameAnalysisPanel {...defaultProps} />);
+    });
+
+    expect(screen.getByTestId("eval-sentence").textContent).toBe(
+      "The position is balanced."
+    );
+  });
+
+  it("states the local-privacy promise alongside the analysis controls", () => {
+    render(<FullGameAnalysisPanel {...defaultProps} />);
+    expect(
+      screen.getByText(
+        "Analysis runs locally in your browser — your game never leaves this device."
+      )
+    ).toBeDefined();
   });
 });

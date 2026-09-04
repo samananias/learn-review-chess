@@ -113,14 +113,14 @@ test.describe("Stockfish browser smoke test", () => {
     const analyzeButton = page.getByRole("button", { name: "Analyze full game" });
     await expect(analyzeButton).toBeEnabled({ timeout: 60000 });
 
-    await expect(page.getByText("Position not yet analyzed.")).toBeVisible();
+    await expect(page.getByText("This position has not been analyzed yet.")).toBeVisible();
 
     await analyzeButton.click();
 
     const results = page.getByTestId("current-ply-result");
-    await expect(results).toContainText(/Depth:|Nodes:|Time:|Score:|Engine line:/, { timeout: 120000 });
+    await expect(results).toContainText(/Engine suggests:|Engine details/, { timeout: 120000 });
 
-    await expect(page.getByText("Best move:")).toBeVisible({ timeout: 120000 });
+    await expect(page.getByText("Engine suggests:")).toBeVisible({ timeout: 120000 });
 
     const jsAsset = stockfishResponses.find((r) => r.url.endsWith(".js"));
     const wasmAsset = stockfishResponses.find((r) => r.url.endsWith(".wasm"));
@@ -193,15 +193,15 @@ test.describe("Stockfish browser smoke test", () => {
     await analyzeButton.click();
 
     const results = page.getByTestId("current-ply-result");
-    await expect(results).toContainText(/Depth:|Nodes:|Time:|Score:|Engine line:/);
-    await expect(page.getByText("Best move:")).toBeVisible({ timeout: 120000 });
+    await expect(results).toContainText(/Engine suggests:|Engine details/);
+    await expect(page.getByText("Engine suggests:")).toBeVisible({ timeout: 120000 });
 
     await expect(analysisStatus).toHaveText("Analysis complete.");
 
     await page.getByRole("button", { name: "Next", exact: true }).click();
 
     await expect(page.getByTestId("review-ply-count")).toHaveText("(1 / 7)");
-    await expect(results).toContainText("Ply: 1");
+    await expect(results).toHaveAttribute("data-ply", "1");
 
     const jsAsset = stockfishResponses.find((r) => r.url.endsWith(".js"));
     const wasmAsset = stockfishResponses.find((r) => r.url.endsWith(".wasm"));
@@ -284,8 +284,8 @@ test.describe("Stockfish browser smoke test", () => {
     await analyzeButton.click();
 
     const results = page.getByTestId("current-ply-result");
-    await expect(results).toContainText(/Depth:|Nodes:|Time:|Score:|Engine line:/);
-    await expect(page.getByText("Best move:")).toBeVisible({ timeout: 120000 });
+    await expect(results).toContainText(/Engine suggests:|Engine details/);
+    await expect(page.getByText("Engine suggests:")).toBeVisible({ timeout: 120000 });
     await expect(analysisStatus).toHaveText("Analysis complete.");
 
     const moveList = page.getByRole("list", { name: "Move list" });
@@ -323,7 +323,7 @@ test.describe("Stockfish browser smoke test", () => {
 
     await analyzeButton.click();
 
-    await expect(page.getByText("Best move:")).toBeVisible({ timeout: 120000 });
+    await expect(page.getByText("Engine suggests:")).toBeVisible({ timeout: 120000 });
     await expect(analysisStatus).toHaveText("Analysis complete.");
 
     const evalBarAfter = page.getByRole("img", { name: /Evaluation:/ });
@@ -345,7 +345,7 @@ test.describe("Stockfish browser smoke test", () => {
 
     await analyzeButton.click();
 
-    await expect(page.getByText("Best move:")).toBeVisible({ timeout: 120000 });
+    await expect(page.getByText("Engine suggests:")).toBeVisible({ timeout: 120000 });
     await expect(analysisStatus).toHaveText("Analysis complete.");
 
     const goToPlyButtons = page.getByRole("button", { name: /Go to ply \d+/ });
