@@ -18,11 +18,11 @@ describe("Home page", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders Review, Learn, and Analysis navigation items", () => {
+  it("renders only the Review navigation item until other sections exist", () => {
     render(<Home />);
     expect(screen.getByRole("link", { name: "Review" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Learn" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Analysis" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Learn" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Analysis" })).toBeNull();
   });
 
   it("marks Review as the selected section", () => {

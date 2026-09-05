@@ -16,20 +16,20 @@ export function MoveExplanationPanel(props: {
       aria-label="Move explanation"
       className={
         explanation === null
-          ? "p-4 rounded-lg bg-neutral-900 text-neutral-100"
-          : "p-4 rounded-lg bg-neutral-900 text-neutral-100 space-y-3"
+          ? "rounded-md border border-black/[.12] p-4 text-black dark:border-white/[.2] dark:text-zinc-50"
+          : "rounded-md border border-black/[.12] p-4 text-black space-y-3 dark:border-white/[.2] dark:text-zinc-50"
       }
     >
       {explanation === null ? (
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Select a move to see its explanation.
         </p>
       ) : (
         <>
-          <h3 className="text-lg font-semibold text-neutral-100">
+          <h3 className="text-lg font-semibold text-black dark:text-zinc-50">
             {explanation.san}
           </h3>
-          <ul className="space-y-1.5 list-disc list-inside text-sm text-neutral-300">
+          <ul className="space-y-1.5 list-disc list-inside text-sm text-zinc-700 dark:text-zinc-300">
             {sentences.map((sentence, index) => (
               <li key={index}>{sentence}</li>
             ))}

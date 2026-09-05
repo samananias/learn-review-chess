@@ -105,6 +105,8 @@ export default function StudyBoard() {
               boardOrientation: orientation,
               onPieceDrop: handlePieceDrop,
               animationDurationInMs: 150,
+              lightSquareStyle: { backgroundColor: "#e4e4e7" },
+              darkSquareStyle: { backgroundColor: "#71717a" },
             }}
           />
         </section>

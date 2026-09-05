@@ -2,8 +2,6 @@ import ReviewWorkspace from "@/features/chess/ReviewWorkspace";
 
 const NAV_ITEMS = [
   { label: "Review", selected: true },
-  { label: "Learn", selected: false },
-  { label: "Analysis", selected: false },
 ] as const;
 
 export default function Home() {

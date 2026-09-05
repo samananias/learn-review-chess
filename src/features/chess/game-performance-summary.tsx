@@ -38,7 +38,7 @@ function PlayerBlock({
       data-testid={testId}
       className="flex flex-col gap-3 rounded-lg border border-black/[.12] p-4 text-black dark:border-white/[.2] dark:text-zinc-50"
     >
-      <h3 className="text-lg font-bold">{title}</h3>
+      <h3 className="text-lg font-semibold">{title}</h3>
 
       <div className="flex flex-col gap-1 text-sm">
         <div>

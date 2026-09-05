@@ -346,6 +346,8 @@ export default function ReviewBoard({
                   arrows: [...positionAnalysis.arrows],
                   clearArrowsOnPositionChange: true,
                   animationDurationInMs: 150,
+                  lightSquareStyle: { backgroundColor: "#e4e4e7" },
+                  darkSquareStyle: { backgroundColor: "#71717a" },
                 }}
               />
             </section>

@@ -145,10 +145,21 @@ describe("EvaluationBar", () => {
     expect(getByTestId("evaluation-bar").getAttribute("role")).toBe("img");
   });
 
-  it("root className contains self-stretch and does not contain h-full", () => {
+  it("root wrapper stretches with the row and the bar fills it without h-full", () => {
     const { getByTestId } = render(<EvaluationBar point={POINT_EQUAL} orientation="white" />);
     const root = getByTestId("evaluation-bar");
-    expect(root.className).toContain("self-stretch");
+    expect(root.parentElement?.className).toContain("self-stretch");
+    expect(root.className).toContain("flex-1");
     expect(root.className).not.toContain("h-full");
+  });
+
+  it("shows a signed short score under the bar", () => {
+    const { getByTestId } = render(<EvaluationBar point={POINT_WHITE_ADVANTAGE} orientation="white" />);
+    expect(getByTestId("evaluation-bar-score").textContent).toBe("+1.5");
+  });
+
+  it("shows an en dash when evaluation is unavailable", () => {
+    const { getByTestId } = render(<EvaluationBar point={null} orientation="white" />);
+    expect(getByTestId("evaluation-bar-score").textContent).toBe("–");
   });
 });

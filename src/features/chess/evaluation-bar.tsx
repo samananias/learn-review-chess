@@ -49,18 +49,40 @@ export function EvaluationBar({
       ? { height: `${fillPercentage}%`, bottom: "0" }
       : { height: `${fillPercentage}%`, top: "0" };
 
+  const shortScore = (() => {
+    if (!point || !point.hasValue || point.clampedCp === null) {
+      return "–";
+    }
+    if (point.isMate) {
+      // The graph model clamps mate scores, so no honest move count exists here.
+      return point.clampedCp > 0 ? "#" : "-#";
+    }
+    const pawns = point.clampedCp / 100;
+    return `${pawns > 0 ? "+" : ""}${pawns.toFixed(1)}`;
+  })();
+
   return (
-    <div
-      data-testid="evaluation-bar"
-      role="img"
-      aria-label={label}
-      className="relative w-7 self-stretch min-h-32 overflow-hidden rounded border border-black/[.15] dark:border-white/[.2] bg-black dark:bg-zinc-900"
-    >
+    <div className="flex w-7 flex-col items-stretch gap-1 self-stretch">
       <div
-        data-testid="evaluation-bar-fill"
-        className="absolute inset-x-0 bg-white dark:bg-zinc-100"
-        style={fillStyle}
-      />
+        data-testid="evaluation-bar"
+        role="img"
+        aria-label={label}
+        title={label}
+        className="relative w-7 flex-1 min-h-32 overflow-hidden rounded border border-black/[.15] dark:border-white/[.2] bg-black dark:bg-zinc-900"
+      >
+        <div
+          data-testid="evaluation-bar-fill"
+          className="absolute inset-x-0 bg-white dark:bg-zinc-100"
+          style={fillStyle}
+        />
+      </div>
+      <span
+        aria-hidden
+        data-testid="evaluation-bar-score"
+        className="text-center font-mono text-xs leading-3 text-zinc-600 dark:text-zinc-400"
+      >
+        {shortScore}
+      </span>
     </div>
   );
 }
