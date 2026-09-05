@@ -154,18 +154,26 @@ export default function LichessGamePicker({ onSelectPgn }: LichessGamePickerProp
               {games.map((gamePgn, index) => {
                 const info = getPlayerAndResult(gamePgn);
                 return (
-                  <li key={index} className="flex items-center justify-between gap-3 rounded-md border border-black/[.12] px-3 py-2 dark:border-white/[.2]">
+                  <li
+                    key={index}
+                    className="flex items-center justify-between gap-3 rounded-md border border-black/[.12] px-3 py-2 dark:border-white/[.2]"
+                  >
+                    <div className="flex flex-col gap-1 text-sm">
+                      <span className="font-medium text-black dark:text-zinc-50">
+                        {info.white} vs {info.black}{" "}
+                        {info.result !== "*" && (
+                          <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                            ({info.result})
+                          </span>
+                        )}
+                      </span>
+                    </div>
                     <button
                       type="button"
                       onClick={() => onSelectPgn(gamePgn)}
-                      className="flex w-full items-center justify-between gap-3 text-left"
+                      className="rounded-md border border-black/[.12] px-2 py-1 text-xs font-medium text-black transition-colors hover:bg-black/[.04] dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
                     >
-                      <span className="font-medium text-black dark:text-zinc-50">
-                        {info.white} vs {info.black}
-                      </span>
-                      <span className="text-xs text-zinc-600 dark:text-zinc-400 font-mono">
-                        {info.result}
-                      </span>
+                      Review game
                     </button>
                   </li>
                 );

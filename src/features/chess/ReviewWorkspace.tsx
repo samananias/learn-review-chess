@@ -50,6 +50,7 @@ export default function ReviewWorkspace() {
   const [isFileReading, setIsFileReading] = useState(false);
   const [multiPgnGames, setMultiPgnGames] = useState<string[]>([]);
   const [importOpen, setImportOpen] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const [descriptionId] = useState("pgn-description");
   const [fileDescriptionId] = useState("file-description");
   const [errorId] = useState("pgn-error");
@@ -87,10 +88,18 @@ export default function ReviewWorkspace() {
     setSummary(summarize(result.value));
     setError(null);
     setActiveSource(source);
+    setConfirmClear(false);
   }, []);
 
   const handlePasteSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const games = splitPgnGames(pgn);
+    if (games.length > 1) {
+      setMultiPgnGames(games);
+      setError(null);
+      return;
+    }
+    setMultiPgnGames([]);
     loadGame("Pasted PGN", pgn);
   };
 
@@ -147,6 +156,15 @@ export default function ReviewWorkspace() {
     setPgn("");
     setActiveSource(null);
     setMultiPgnGames([]);
+    setConfirmClear(false);
+  };
+
+  const handleClearRequest = () => {
+    if (!confirmClear) {
+      setConfirmClear(true);
+      return;
+    }
+    handleClear();
   };
 
   const importPanelBody = (
@@ -202,14 +220,14 @@ export default function ReviewWorkspace() {
               Only completed games are reviewed. Paste the full PGN, including
               move list and result.
             </p>
-            <textarea
-              id="pgn-input"
-              name="pgn"
-              value={pgn}
-              onChange={(event) => setPgn(event.target.value)}
-              aria-describedby={descriptionId}
-              aria-invalid={error ? true : undefined}
-              rows={6}
+          <textarea
+            id="pgn-input"
+            name="pgn"
+            value={pgn}
+            onChange={(event) => setPgn(event.target.value)}
+            aria-describedby={`${descriptionId}${error ? ` ${errorId}` : ""}`}
+            aria-invalid={error ? true : undefined}
+            rows={6}
               className="mt-2 w-full resize-y rounded-md border border-black/[.12] bg-white p-2 text-sm text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground dark:border-white/[.2] dark:bg-black dark:text-zinc-50"
             />
             <button
@@ -253,7 +271,7 @@ export default function ReviewWorkspace() {
               disabled={isFileReading}
               aria-busy={isFileReading}
               aria-invalid={error ? true : undefined}
-              aria-describedby={fileDescriptionId}
+              aria-describedby={`${fileDescriptionId}${error ? ` ${errorId}` : ""}`}
               className="mt-2 block w-full text-sm text-zinc-600 file:mr-4 file:rounded-md file:border file:border-black/[.12] file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-black hover:file:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:text-zinc-400 dark:file:border-white/[.2] dark:file:bg-black dark:file:text-zinc-50 dark:hover:file:bg-white/[.08]"
             />
             {isFileReading && (
@@ -265,48 +283,54 @@ export default function ReviewWorkspace() {
                 Reading PGN file...
               </p>
             )}
-            {multiPgnGames.length > 1 && (
-              <div className="mt-3 flex flex-col gap-2">
-                <div className="text-sm font-medium text-black dark:text-zinc-50">
-                  Showing {multiPgnGames.length > 50 ? `first 50 of ${multiPgnGames.length}` : multiPgnGames.length} games
-                </div>
-                <ul className="flex list-none flex-col gap-2 p-0" role="list">
-                  {(() => {
-                    const gameCounts = new Map<string, number>();
-                    return multiPgnGames.slice(0, 50).map((gamePgn) => {
-                      const count = (gameCounts.get(gamePgn) ?? 0) + 1;
-                      gameCounts.set(gamePgn, count);
-                      const key = `${pgnKeyHash(gamePgn)}-${count}`;
-                      const { white, black, result } = getPlayerAndResult(gamePgn);
-                      return (
-                        <li
-                          key={key}
-                          className="flex items-center justify-between gap-3 rounded-md border border-black/[.12] px-3 py-2 dark:border-white/[.2]"
-                        >
-                          <div className="flex flex-col gap-1 text-sm font-medium text-black dark:text-zinc-50">
-                            <span>
-                              {white} vs {black}{" "}
-                              {result !== "*" && (
-                                <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                                  ({result})
-                                </span>
-                              )}
+          </div>
+        )}
+
+        {multiPgnGames.length > 1 && (
+          <div className="flex flex-col gap-2" aria-label="Imported games">
+            <div className="text-sm font-medium text-black dark:text-zinc-50">
+              Showing {multiPgnGames.length > 50 ? `first 50 of ${multiPgnGames.length}` : multiPgnGames.length} games
+            </div>
+            <ul className="flex list-none flex-col gap-2 p-0" role="list">
+              {(() => {
+                const gameCounts = new Map<string, number>();
+                return multiPgnGames.slice(0, 50).map((gamePgn) => {
+                  const count = (gameCounts.get(gamePgn) ?? 0) + 1;
+                  gameCounts.set(gamePgn, count);
+                  const key = `${pgnKeyHash(gamePgn)}-${count}`;
+                  const { white, black, result } = getPlayerAndResult(gamePgn);
+                  return (
+                    <li
+                      key={key}
+                      className="flex items-center justify-between gap-3 rounded-md border border-black/[.12] px-3 py-2 dark:border-white/[.2]"
+                    >
+                      <div className="flex flex-col gap-1 text-sm font-medium text-black dark:text-zinc-50">
+                        <span>
+                          {white} vs {black}{" "}
+                          {result !== "*" && (
+                            <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                              ({result})
                             </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => loadGame("Uploaded file", gamePgn)}
-                            className="rounded-md border border-black/[.12] px-2 py-1 text-xs font-medium text-black transition-colors hover:bg-black/[.04] dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
-                          >
-                            Review game
-                          </button>
-                        </li>
-                      );
-                    });
-                  })()}
-                </ul>
-              </div>
-            )}
+                          )}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          loadGame(
+                            importMethod === "file" ? "Uploaded file" : "Pasted PGN",
+                            gamePgn
+                          )
+                        }
+                        className="rounded-md border border-black/[.12] px-2 py-1 text-xs font-medium text-black transition-colors hover:bg-black/[.04] dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
+                      >
+                        Review game
+                      </button>
+                    </li>
+                  );
+                });
+              })()}
+            </ul>
           </div>
         )}
 
@@ -341,7 +365,7 @@ export default function ReviewWorkspace() {
             </button>
           </div>
           <div className="space-y-3">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p role="status" aria-live="polite" className="text-sm text-zinc-600 dark:text-zinc-400">
               {summary.halfMoves} half-move
               {summary.halfMoves === 1 ? "" : "s"} imported.
             </p>
@@ -363,12 +387,23 @@ export default function ReviewWorkspace() {
                 <dd>{summary.result ?? "Not specified"}</dd>
               </div>
             </dl>
+            {confirmClear && (
+              <p
+                id="clear-imported-game-warning"
+                className="text-xs text-zinc-600 dark:text-zinc-400"
+              >
+                Clearing removes this game and its analysis from the workspace.
+              </p>
+            )}
             <button
               type="button"
-              onClick={handleClear}
+              onClick={handleClearRequest}
+              aria-describedby={
+                confirmClear ? "clear-imported-game-warning" : undefined
+              }
               className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
             >
-              Clear imported game
+              {confirmClear ? "Confirm clear game" : "Clear imported game"}
             </button>
           </div>
           <div id="import-options" hidden={!importOpen}>

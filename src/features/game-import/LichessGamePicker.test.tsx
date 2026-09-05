@@ -107,7 +107,7 @@ describe("LichessGamePicker", () => {
     fireEvent.click(screen.getByRole("button", { name: /Load games/i }));
 
     await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(1));
-    expect(screen.getByText("1-0")).toBeInTheDocument();
+    expect(screen.getByText("(1-0)")).toBeInTheDocument();
   });
 
   it("clicking a row calls onSelectPgn with exactly that game's pgn text and nothing else", async () => {
@@ -122,7 +122,9 @@ describe("LichessGamePicker", () => {
     fireEvent.click(screen.getByRole("button", { name: /Load games/i }));
 
     await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(2));
-    fireEvent.click(screen.getByRole("button", { name: /C vs D/i }));
+    const reviewButtons = screen.getAllByRole("button", { name: "Review game" });
+    expect(reviewButtons).toHaveLength(2);
+    fireEvent.click(reviewButtons[1]);
     expect(onSelectPgn).toHaveBeenCalledTimes(1);
     expect(onSelectPgn).toHaveBeenCalledWith(game2Pgn);
   });
@@ -216,7 +218,7 @@ describe("LichessGamePicker", () => {
     fireEvent.change(screen.getByLabelText(/Lichess username/i), { target: { value: "thibault" } });
     fireEvent.click(screen.getByRole("button", { name: /Load games/i }));
 
-    const gameButton = await screen.findByRole("button", { name: /Magnus vs Hikaru/i });
+    const gameButton = await screen.findByRole("button", { name: "Review game" });
     expect(gameButton).toBeInTheDocument();
 
     fireEvent.click(gameButton);

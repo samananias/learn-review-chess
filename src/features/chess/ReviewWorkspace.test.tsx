@@ -199,6 +199,7 @@ describe("ReviewWorkspace", () => {
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Clear imported game" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm clear game" }));
     expect(
       screen.getByRole("region", { name: "Chess workspace" })
     ).toBeInTheDocument();
@@ -411,6 +412,7 @@ describe("ReviewWorkspace", () => {
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Clear imported game" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm clear game" }));
     expect(
       screen.getByRole("region", { name: "Chess workspace" })
     ).toBeInTheDocument();
@@ -430,6 +432,7 @@ describe("ReviewWorkspace", () => {
     fireEvent.change(textbox, { target: { value: SHORT_GAME } });
     fireEvent.click(screen.getByRole("button", { name: "Load game" }));
     fireEvent.click(screen.getByRole("button", { name: "Clear imported game" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm clear game" }));
 
     expect(screen.getByRole("button", { name: "Paste PGN" })).toHaveAttribute(
       "aria-pressed",
@@ -438,6 +441,84 @@ describe("ReviewWorkspace", () => {
     expect(
       screen.getByRole("textbox", { name: "Paste a completed PGN game" })
     ).toHaveValue("");
+  });
+
+  it("offers a chooser when pasted PGN contains multiple games", () => {
+    const twoGames = `${SHORT_GAME}\n\n${['[Event "Two"]', "1. d4 d5 *"].join("\n")}`;
+    render(<ReviewWorkspace />);
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Paste a completed PGN game" }),
+      { target: { value: twoGames } }
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Load game" }));
+
+    expect(screen.getByText(/Showing 2 games/i)).toBeInTheDocument();
+    const reviewButtons = screen.getAllByRole("button", { name: "Review game" });
+    expect(reviewButtons).toHaveLength(2);
+
+    fireEvent.click(reviewButtons[1]);
+    expect(
+      screen.getByRole("region", { name: "Review chessboard" })
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("review-ply-count")).toHaveTextContent("(0 / 2)");
+    expect(screen.getByText("Source:")).toBeInTheDocument();
+    expect(screen.getByText("Pasted PGN", { selector: "dd" })).toBeInTheDocument();
+  });
+
+  it("asks for confirmation before clearing an imported game", () => {
+    render(<ReviewWorkspace />);
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Paste a completed PGN game" }),
+      { target: { value: SHORT_GAME } }
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Load game" }));
+    expect(
+      screen.getByRole("region", { name: "Review chessboard" })
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear imported game" }));
+    expect(
+      screen.getByRole("region", { name: "Review chessboard" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Clearing removes this game and its analysis/)
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Confirm clear game" }));
+    expect(
+      screen.getByRole("region", { name: "Chess workspace" })
+    ).toBeInTheDocument();
+  });
+
+  it("links the validation error to the PGN textarea via aria-describedby", () => {
+    render(<ReviewWorkspace />);
+    const textbox = screen.getByRole("textbox", {
+      name: "Paste a completed PGN game",
+    });
+    expect(textbox.getAttribute("aria-describedby")).not.toContain("pgn-error");
+
+    fireEvent.change(textbox, { target: { value: "not valid pgn" } });
+    fireEvent.click(screen.getByRole("button", { name: "Load game" }));
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    const describedBy = textbox.getAttribute("aria-describedby")!;
+    expect(describedBy).toContain("pgn-error");
+    expect(document.getElementById(describedBy.split(" ")[1])?.id).toBe(
+      "pgn-error"
+    );
+  });
+
+  it("announces a successful import to assistive technology", () => {
+    render(<ReviewWorkspace />);
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Paste a completed PGN game" }),
+      { target: { value: SHORT_GAME } }
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Load game" }));
+
+    const announcement = screen.getByText(/half-moves imported/);
+    expect(announcement).toHaveAttribute("role", "status");
+    expect(announcement).toHaveAttribute("aria-live", "polite");
   });
 
   describe("file upload import method", () => {
@@ -755,6 +836,9 @@ describe("ReviewWorkspace", () => {
       await act(async () => {
         fireEvent.click(screen.getByRole("button", { name: "Clear imported game" }));
       });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "Confirm clear game" }));
+      });
       expect(screen.queryByText(/showing 2 games/i)).not.toBeInTheDocument();
     });
 
@@ -863,10 +947,10 @@ describe("ReviewWorkspace", () => {
       fireEvent.change(screen.getByLabelText(/lichess username/i), { target: { value: "thibault" } });
       fireEvent.click(screen.getByRole("button", { name: "Load games" }));
 
-      await waitFor(() => expect(screen.getByRole("button", { name: /Alice vs Bob/i })).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByRole("button", { name: "Review game" })).toBeInTheDocument());
 
       await act(async () => {
-        fireEvent.click(screen.getByRole("button", { name: /Alice vs Bob/i }));
+        fireEvent.click(screen.getByRole("button", { name: "Review game" }));
       });
 
       expect(screen.getByRole("region", { name: "Review chessboard" })).toBeInTheDocument();
@@ -1167,11 +1251,11 @@ describe("ReviewWorkspace", () => {
       fireEvent.click(screen.getByRole("button", { name: "Load games" }));
 
       await waitFor(() =>
-        expect(screen.getByRole("button", { name: /Alice vs Bob/i })).toBeInTheDocument()
+        expect(screen.getByRole("button", { name: "Review game" })).toBeInTheDocument()
       );
 
       await act(async () => {
-        fireEvent.click(screen.getByRole("button", { name: /Alice vs Bob/i }));
+        fireEvent.click(screen.getByRole("button", { name: "Review game" }));
       });
 
       const alert = screen.getByRole("alert");

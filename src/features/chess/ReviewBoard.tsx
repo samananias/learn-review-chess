@@ -224,6 +224,36 @@ export default function ReviewBoard({
   const handleFlip = () =>
     setOrientation((current) => (current === "white" ? "black" : "white"));
 
+  const handleReviewKeyDown = (event: React.KeyboardEvent) => {
+    const target = event.target as HTMLElement | null;
+    if (
+      target &&
+      (target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+    switch (event.key) {
+      case "ArrowLeft":
+        event.preventDefault();
+        goTo(ply - 1);
+        break;
+      case "ArrowRight":
+        event.preventDefault();
+        goTo(ply + 1);
+        break;
+      case "Home":
+        event.preventDefault();
+        goTo(0);
+        break;
+      case "End":
+        event.preventDefault();
+        goTo(timeline.totalPlies);
+        break;
+    }
+  };
+
   const statusText =
     ply === 0
       ? "Start position"
@@ -233,7 +263,10 @@ export default function ReviewBoard({
 
   return (
     <div className="review-layout">
-      <div className="review-board-block flex min-w-0 flex-col gap-4">
+      <div
+        className="review-board-block flex min-w-0 flex-col gap-4"
+        onKeyDown={handleReviewKeyDown}
+      >
         <div
           role="status"
           aria-live="polite"

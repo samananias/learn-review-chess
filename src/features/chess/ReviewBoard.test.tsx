@@ -990,6 +990,37 @@ describe("ReviewBoard", () => {
     });
   });
 
+  describe("keyboard timeline navigation", () => {
+    it("ArrowRight advances one ply from inside the review region", () => {
+      render(<ReviewBoard timeline={timelineOf(SHORT_GAME)} />);
+      fireEvent.keyDown(screen.getByRole("group", { name: "Timeline navigation" }), {
+        key: "ArrowRight",
+      });
+      expect(screen.getByTestId("review-ply-count")).toHaveTextContent("(1 / 4)");
+    });
+
+    it("ArrowLeft steps back one ply", () => {
+      render(<ReviewBoard timeline={timelineOf(SHORT_GAME)} />);
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      fireEvent.keyDown(screen.getByRole("group", { name: "Timeline navigation" }), {
+        key: "ArrowLeft",
+      });
+      expect(screen.getByTestId("review-ply-count")).toHaveTextContent("(0 / 4)");
+    });
+
+    it("Home jumps to the start and End jumps to the final position", () => {
+      render(<ReviewBoard timeline={timelineOf(SHORT_GAME)} />);
+      fireEvent.keyDown(screen.getByRole("group", { name: "Timeline navigation" }), {
+        key: "End",
+      });
+      expect(screen.getByTestId("review-ply-count")).toHaveTextContent("(4 / 4)");
+      fireEvent.keyDown(screen.getByRole("group", { name: "Timeline navigation" }), {
+        key: "Home",
+      });
+      expect(screen.getByTestId("review-ply-count")).toHaveTextContent("(0 / 4)");
+    });
+  });
+
   it("the board shows the game position when not exploring", () => {
     render(<ReviewBoard timeline={timelineOf(SHORT_GAME)} />);
     expect(screen.getByTestId("chessboard").getAttribute("data-position")).toBe(
