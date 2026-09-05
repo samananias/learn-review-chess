@@ -206,6 +206,12 @@ describe("ReviewBoard", () => {
     vi.doUnmock("@/features/chess/engine-worker-factory");
   });
 
+    const INITIAL = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    const AFTER_E4 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
+    const AFTER_E5 = "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
+    const AFTER_NF3 = "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
+    const AFTER_NC6 = "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKBNR w KQkq - 2 3";
+
   it("renders the review chessboard region", () => {
     render(<ReviewBoard timeline={timelineOf(SHORT_GAME)} />);
     expect(
@@ -551,12 +557,6 @@ describe("ReviewBoard", () => {
   });
 
   describe("buildClassificationMap", () => {
-    const INITIAL = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    const AFTER_E4 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
-    const AFTER_E5 = "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2";
-    const AFTER_NF3 = "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
-    const AFTER_NC6 = "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKBNR w KQkq - 2 3";
-
     function makeJob(ply: number, fen: string): QuickPassJob {
       return {
         id: `qp-${ply}`,
@@ -678,12 +678,6 @@ describe("ReviewBoard", () => {
     function makeScore(value: number): EngineScore {
       return { type: "cp", value, perspective: "white" };
     }
-
-    const INITIAL = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    const AFTER_E4 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
-    const AFTER_E5 = "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2";
-    const AFTER_NF3 = "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
-    const AFTER_NC6 = "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKBNR w KQkq - 2 3";
 
     function makeJob(ply: number, fen: string): QuickPassJob {
       return {
@@ -1193,12 +1187,6 @@ describe("ReviewBoard", () => {
   });
 
   describe("deep critical pass", () => {
-    const INITIAL = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    const AFTER_E4 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
-    const AFTER_E5 = "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2";
-    const AFTER_NF3 = "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
-    const AFTER_NC6 = "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKBNR w KQkq - 2 3";
-
     function makeJob(ply: number, fen: string): QuickPassJob {
       return {
         id: `qp-${ply}`,
@@ -1382,6 +1370,106 @@ describe("ReviewBoard", () => {
       const differentTimeline = timelineOf('[Event "Other"]\n1. d4 d5 *');
       rerender(<ReviewBoard timeline={differentTimeline} />);
       expect(screen.queryByText("Analyze critical moments")).toBeNull();
+    });
+  });
+
+  describe("board classification badges", () => {
+    function badgeResult(
+      timeline: ReviewTimeline,
+      ply: number,
+      score: EngineScore,
+    ): QuickPassCompletedJob {
+      const info: EngineInfo = { depth: 14, score, pv: ["e2e4"] };
+      return {
+        job: {
+          id: `badge-${ply}`,
+          phase: "quick-pass",
+          ply,
+          fen: timeline.steps[ply].fen,
+          limit: { kind: "depth", value: 14 },
+        },
+        info,
+        bestMove: { move: "e2e4", ponder: null },
+        candidateLines: [{ rank: 1, info }],
+      };
+    }
+
+    afterEach(() => {
+      mockAnalysisState.status = "idle";
+      mockAnalysisState.results = [];
+    });
+
+    it("renders a badge on each classified move's destination square", () => {
+      const timeline = timelineOf(SHORT_GAME);
+      mockAnalysisState.status = "completed";
+      mockAnalysisState.results = [
+        badgeResult(timeline, 0, { type: "cp", value: 100, perspective: "white" }),
+        badgeResult(timeline, 1, { type: "cp", value: 100, perspective: "white" }),
+        badgeResult(timeline, 2, { type: "cp", value: 150, perspective: "white" }),
+        badgeResult(timeline, 3, { type: "cp", value: 130, perspective: "white" }),
+        badgeResult(timeline, 4, { type: "cp", value: 130, perspective: "white" }),
+      ];
+
+      render(<ReviewBoard timeline={timeline} />);
+
+      const badges = screen.getAllByTestId("board-classification-cell");
+      expect(badges).toHaveLength(4);
+      expect(badges[0].getAttribute("data-ply")).toBe("1");
+      expect(
+        within(badges[0]).getByTestId("board-classification-badge").getAttribute("data-classification")
+      ).toBe("best");
+      // 1. e4 lands on e4: file e starts at the 4th column edge, rank 4 the 4th row edge.
+      expect(badges[0].style.left).toBe("50%");
+      expect(badges[0].style.top).toBe("50%");
+    });
+
+    it("renders book badges for unclassified plies inside the opening-book line", () => {
+      // 1. e4 is book; 1...a6 leaves it. With no ply-0 result, 1. e4 cannot be
+      // assessed (delta missing) so it stays unclassified — and book.
+      const timeline = timelineOf('[Event "T"]\n[White "A"]\n[Black "B"]\n1. e4 a6 *');
+      mockAnalysisState.status = "completed";
+      mockAnalysisState.results = [
+        badgeResult(timeline, 1, { type: "cp", value: 100, perspective: "white" }),
+        badgeResult(timeline, 2, { type: "cp", value: 10, perspective: "white" }),
+      ];
+
+      render(<ReviewBoard timeline={timeline} />);
+
+      const badges = screen.getAllByTestId("board-classification-cell");
+      expect(badges).toHaveLength(2);
+      // Ply 1 stayed unclassified inside the book line; ply 2 carries a verdict.
+      expect(badges[0].getAttribute("data-ply")).toBe("1");
+      expect(
+        within(badges[0]).getByTestId("board-classification-badge").getAttribute("data-classification")
+      ).toBe("book");
+      expect(
+        within(badges[1]).getByTestId("board-classification-badge").getAttribute("data-classification")
+      ).not.toBe("book");
+      // Ply 1's badge sits on e4 (file e); ply 2's on a6 (file a, rank 6).
+      expect(badges[0].style.left).toBe("50%");
+      expect(badges[0].style.top).toBe("50%");
+      expect(badges[1].style.left).toBe("0%");
+      expect(badges[1].style.top).toBe("25%");
+    });
+
+    it("repositions badges when the board is flipped", () => {
+      const timeline = timelineOf(SHORT_GAME);
+      mockAnalysisState.status = "completed";
+      mockAnalysisState.results = [
+        badgeResult(timeline, 0, { type: "cp", value: 100, perspective: "white" }),
+        badgeResult(timeline, 1, { type: "cp", value: 100, perspective: "white" }),
+        badgeResult(timeline, 2, { type: "cp", value: 150, perspective: "white" }),
+        badgeResult(timeline, 3, { type: "cp", value: 130, perspective: "white" }),
+        badgeResult(timeline, 4, { type: "cp", value: 130, perspective: "white" }),
+      ];
+
+      render(<ReviewBoard timeline={timeline} />);
+      fireEvent.click(screen.getByRole("button", { name: "Flip board" }));
+
+      const badges = screen.getAllByTestId("board-classification-cell");
+      // e4 from Black's side: file e starts at the 3rd column edge, rank 4 the 3rd row edge.
+      expect(badges[0].style.left).toBe("37.5%");
+      expect(badges[0].style.top).toBe("37.5%");
     });
   });
 });

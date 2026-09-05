@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
-import { ClassificationIcon } from "@/features/chess/classification-icon";
+import { ClassificationIcon, type ClassificationIconName } from "@/features/chess/classification-icon";
 import type { MoveClassification } from "@/features/chess/move-classification";
 
 const CLASSIFICATIONS: MoveClassification[] = [
@@ -108,6 +108,38 @@ describe("ClassificationIcon", () => {
       );
       const title = container.querySelector("title");
       expect(title?.textContent?.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("renders the book icon with its own display name", () => {
+    const { container } = render(<ClassificationIcon classification="book" />);
+    const svg = container.querySelector("svg");
+    expect(svg).toBeTruthy();
+    expect(svg?.getAttribute("data-classification")).toBe("book");
+    expect(container.querySelector("title")?.textContent).toBe("Book move");
+  });
+
+  it("paints each verdict circle with the reference palette color", () => {
+    const expected: Record<string, string> = {
+      brilliant: "#20b28f",
+      great: "#6f8fc2",
+      best: "#62b448",
+      excellent: "#79b25a",
+      good: "#85a465",
+      "missed-win": "#d1a419",
+      inaccuracy: "#f3c11d",
+      mistake: "#eca53f",
+      blunder: "#e2433c",
+      book: "#c9a26b",
+    };
+    for (const [classification, color] of Object.entries(expected)) {
+      const { container } = render(
+        <ClassificationIcon
+          classification={classification as ClassificationIconName}
+        />
+      );
+      const circle = container.querySelector("svg circle");
+      expect(circle?.getAttribute("fill")).toBe(color);
     }
   });
 

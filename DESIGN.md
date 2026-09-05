@@ -23,14 +23,16 @@ colors:
   flag-fall-text: "#b91c1c"
   flag-fall-bg-dark: "#450a0a"
   flag-fall-text-dark: "#fca5a5"
-  brilliant-cyan: "#22d3ee"
-  great-indigo: "#818cf8"
-  best-green: "#22c55e"
-  excellent-teal: "#14b8a6"
-  good-yellow: "#eab308"
-  missed-win-fuchsia: "#d946ef"
-  inaccuracy-orange: "#f97316"
-  blunder-red: "#991b1b"
+  brilliant-teal: "#20b28f"
+  great-blue: "#6f8fc2"
+  best-green: "#62b448"
+  excellent-green: "#79b25a"
+  good-olive: "#85a465"
+  missed-win-mustard: "#d1a419"
+  inaccuracy-yellow: "#f3c11d"
+  mistake-orange: "#eca53f"
+  blunder-red: "#e2433c"
+  book-tan: "#c9a26b"
   unclassified-slate: "#64748b"
   arrow-first: "#22c55e"
   arrow-second: "#3b82f6"
@@ -164,18 +166,19 @@ A two-temperature monochrome core (pure paper white ↔ carbon black, both named
 
 ### Primary (semantic spectrum)
 
-The classification palette — the product's evaluative voice. Each color is bound to exactly one verdict and always paired with its glyph (`!!`, `!`, `★`, `?!`, `?`, `??`), never used as the sole signal:
+The classification palette — the product's evaluative voice, matched to the reference icon set (saturated circle, white glyph). Each color is bound to exactly one verdict and always paired with its glyph, never used as the sole signal:
 
-- **Brilliant Cyan** (#22d3ee): Brilliant moves (`!!`).
-- **Great Indigo** (#818cf8): Great moves (`!`).
-- **Best Green** (#22c55e): Best moves (`★`); also the 1st engine-candidate arrow.
-- **Excellent Teal** (#14b8a6): Excellent moves.
-- **Good Yellow** (#eab308): Good moves.
-- **Missed Win Fuchsia** (#d946ef): Missed wins.
-- **Inaccuracy Orange** (#f97316): Inaccuracies (`?!`).
-- **Mistake Red** (#ef4444): Mistakes (`?`).
-- **Blunder Red** (#991b1b): Blunders (`??`) — the only darkened step in the spectrum, marking maximum severity.
-- **Unclassified Slate** (#64748b): Book moves and unclassified positions.
+- **Brilliant Teal** (#20b28f): Brilliant moves (`!!`).
+- **Great Blue** (#6f8fc2): Great moves (`!`).
+- **Best Green** (#62b448): Best moves (star).
+- **Excellent Green** (#79b25a): Excellent moves (thumbs-up).
+- **Good Olive** (#85a465): Good moves (check).
+- **Missed Win Mustard** (#d1a419): Missed wins (minus).
+- **Inaccuracy Yellow** (#f3c11d): Inaccuracies (`?!`).
+- **Mistake Orange** (#eca53f): Mistakes (`?`).
+- **Blunder Red** (#e2433c): Blunders (`??`).
+- **Book Tan** (#c9a26b): Opening-book moves (open book) — a display-only verdict from the ECO lookup, not an engine classification.
+- **Unclassified Slate** (#64748b): hollow circle for positions without a verdict.
 - **Arrow Blue** (#3b82f6) / **Arrow Purple** (#a855f7): 2nd and 3rd engine-candidate arrows.
 
 ### Error
@@ -265,7 +268,7 @@ Rectangular with quiet corners. `rounded-md` (6px) is the working radius for eve
 
 ### Move Classification Badges (signature)
 
-The verdict system: each classification is a small badge in its spectrum color carrying the glyph (`!!`, `!`, `★`, `?!`, `?`, `??`). Color encodes the verdict tier; the glyph guarantees the information survives color-blindness and monochrome rendering.
+The verdict system, matched to the reference icon set: a filled circle in the verdict color carrying a white glyph (`!!`, `!`, star, thumbs-up, check, minus, `?!`, `?`, `??`, open book) with a soft dark echo under the glyph for depth. Badges appear in the move strip, the performance summary, and — after analysis — directly on the board at each classified move's destination square, with Book badges for opening-book plies. Color encodes the verdict tier; the glyph guarantees the information survives color-blindness and monochrome rendering.
 
 ### Evaluation Graph (signature)
 

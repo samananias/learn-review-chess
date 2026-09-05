@@ -33,6 +33,8 @@ import { buildMoveExplanations } from "./move-explanation";
 import { MoveExplanationPanel } from "./move-explanation-panel";
 import { lookupOpening } from "./opening-book";
 import { OpeningDisplay } from "./opening-display";
+import { ClassificationIcon, type ClassificationIconName } from "./classification-icon";
+import { squareToPosition } from "./board-badge";
 
 const FULL_GAME_ANALYSIS_LIMIT: EngineAnalysisLimit = { kind: "depth", value: 10 };
 const DEEP_PASS_LIMIT: EngineAnalysisLimit = { kind: "depth", value: 18 };
@@ -120,6 +122,45 @@ export default function ReviewBoard({
     const res = buildMoveAssessments(timeline, analysisState.results);
     return res.ok ? classifyMoves(res.assessments) : [];
   }, [timeline, analysisState.results]);
+
+  // Plies still inside the longest matched opening-book line get the Book badge.
+  const bookPlies = useMemo(() => {
+    const plies = new Set<number>();
+    const sans: string[] = [];
+    for (let ply = 1; ply <= timeline.totalPlies; ply += 1) {
+      const san = timeline.steps[ply]?.move?.san;
+      if (san === undefined) {
+        break;
+      }
+      sans.push(san);
+      if (lookupOpening(sans) === null) {
+        break;
+      }
+      plies.add(ply);
+    }
+    return plies;
+  }, [timeline]);
+
+  const boardBadges = useMemo(() => {
+    const badges: {
+      readonly ply: number;
+      readonly square: string;
+      readonly classification: ClassificationIconName;
+    }[] = [];
+    for (let ply = 1; ply <= timeline.totalPlies; ply += 1) {
+      const square = timeline.steps[ply]?.move?.to;
+      if (square === undefined) {
+        continue;
+      }
+      const classification = classifications.get(ply);
+      if (classification !== undefined) {
+        badges.push({ ply, square, classification });
+      } else if (bookPlies.has(ply)) {
+        badges.push({ ply, square, classification: "book" });
+      }
+    }
+    return badges;
+  }, [classifications, bookPlies, timeline]);
 
   if (analysisState.status === "completed" && criticalSelection === null) {
     setCriticalSelection(selectCriticalPositions(classifiedMoves));
@@ -333,7 +374,7 @@ export default function ReviewBoard({
 
         <div className="flex w-full max-w-2xl items-stretch gap-3">
           <div
-            className="aspect-square w-full max-w-2xl overflow-hidden rounded-lg border border-black/[.15] dark:border-white/[.2]"
+            className="relative aspect-square w-full max-w-2xl overflow-hidden rounded-lg border border-black/[.15] dark:border-white/[.2]"
           >
             <section aria-label="Review chessboard" className="h-full w-full">
                <Chessboard
@@ -351,6 +392,39 @@ export default function ReviewBoard({
                 }}
               />
             </section>
+            {boardBadges.length > 0 && (
+              <div
+                data-testid="board-classifications"
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+              >
+                {boardBadges.map(({ ply, square, classification }) => {
+                  const position = squareToPosition(square, orientation);
+                  return (
+                    <span
+                      key={ply}
+                      data-testid="board-classification-cell"
+                      data-ply={ply}
+                      className="absolute block h-[12.5%] w-[12.5%]"
+                      style={{
+                        left: `${position.left}%`,
+                        top: `${position.top}%`,
+                      }}
+                    >
+                      <span
+                        data-testid="board-classification-badge"
+                        data-ply={ply}
+                        data-classification={classification}
+                        className="absolute block h-[44%] w-[44%]"
+                        style={{ right: "3%", top: "3%" }}
+                      >
+                        <ClassificationIcon classification={classification} className="h-full w-full" />
+                      </span>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
           <EvaluationBar point={currentGraphPoint} orientation={orientation} />
         </div>

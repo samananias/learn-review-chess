@@ -5,7 +5,7 @@ import type { GamePhase } from "./game-phase";
 import { MOVE_CLASSIFICATION_ORDER } from "./move-classification";
 import { ClassificationIcon } from "./classification-icon";
 import { estimateRatingFromAccuracy } from "./rating-estimate";
-import { CLASSIFICATION_LABELS } from "./classification-presentation";
+import { CLASSIFICATION_LABELS, BOOK_LABEL } from "./classification-presentation";
 
 const PHASES: readonly GamePhase[] = ["opening", "middlegame", "endgame"];
 
@@ -146,6 +146,10 @@ export function GamePerformanceSummary({
               <span>{CLASSIFICATION_LABELS[classification]}</span>
             </li>
           ))}
+          <li className="flex items-center gap-2">
+            <ClassificationIcon classification="book" />
+            <span>{BOOK_LABEL}</span>
+          </li>
         </ul>
       </details>
     </section>
