@@ -17,6 +17,8 @@ describe("explorer-move", () => {
       ok: true,
       fen: "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3",
       san: "Bc4",
+      from: "f1",
+      to: "c4",
     });
   });
 
@@ -26,6 +28,8 @@ describe("explorer-move", () => {
       ok: true,
       fen: "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3",
       san: "Bc4",
+      from: "f1",
+      to: "c4",
     });
     expect(result.ok && result.fen.split(" ")[1]).toBe("b");
   });
@@ -36,6 +40,8 @@ describe("explorer-move", () => {
       ok: true,
       fen: "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
       san: "Bc5",
+      from: "f8",
+      to: "c5",
     });
   });
 
@@ -81,6 +87,8 @@ describe("explorer-move", () => {
       ok: true,
       fen: "Q7/8/8/8/8/8/8/K6k b - - 0 1",
       san: "a8=Q+",
+      from: "a7",
+      to: "a8",
     });
   });
 });

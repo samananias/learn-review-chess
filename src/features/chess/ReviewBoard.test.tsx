@@ -1493,6 +1493,117 @@ describe("ReviewBoard", () => {
       expect(cell.style.top).toBe("37.5%");
     });
 
+  describe("custom variation branches", () => {
+    function scoredResults(timeline: ReviewTimeline): QuickPassCompletedJob[] {
+      const scores = [100, 100, 150, 130, 130];
+      const results: QuickPassCompletedJob[] = [];
+      for (let ply = 0; ply < scores.length && ply <= timeline.totalPlies; ply += 1) {
+        const info: EngineInfo = { depth: 14, score: { type: "cp", value: scores[ply], perspective: "white" }, pv: ["e2e4"] };
+        results.push({
+          job: {
+            id: `cv-${ply}`,
+            phase: "quick-pass",
+            ply,
+            fen: timeline.steps[ply].fen,
+            limit: { kind: "depth", value: 14 },
+          },
+          info,
+          bestMove: { move: "e2e4", ponder: null },
+          candidateLines: [{ rank: 1, info }],
+        });
+      }
+      return results;
+    }
+
+    function setupAnalyzedGame(pgn = SHORT_GAME) {
+      const timeline = timelineOf(pgn);
+      mockAnalysisState.status = "completed";
+      mockAnalysisState.results = scoredResults(timeline);
+      render(<ReviewBoard timeline={timeline} />);
+      return timeline;
+    }
+
+    afterEach(() => {
+      mockAnalysisState.status = "idle";
+      mockAnalysisState.results = [];
+    });
+
+    it("creates a temporary variation when a custom move is dropped", () => {
+      setupAnalyzedGame();
+
+      fireEvent.click(screen.getByTestId("simulate-drop"));
+
+      // The board shows the custom position; the strip gains a branch group.
+      expect(screen.getByTestId("chessboard").getAttribute("data-position")).toContain("4P3");
+      const branchMoves = screen.getAllByTestId("branch-move");
+      expect(branchMoves).toHaveLength(1);
+      expect(branchMoves[0].textContent).toContain("1. e4");
+      expect(screen.getByTestId("branch-separator")).toBeInTheDocument();
+      // The original game chip is untouched and still present.
+      expect(screen.getAllByRole("button", { name: /1\. e4/ }).length).toBeGreaterThanOrEqual(2);
+      // The custom-move panel describes the temporary branch.
+      expect(screen.getByTestId("custom-move-panel")).toBeInTheDocument();
+      expect(screen.getByTestId("custom-move-label").textContent).toBe("+1. e4");
+    });
+
+    it("steps back out of the variation with Previous while keeping it cached", () => {
+      setupAnalyzedGame();
+      fireEvent.click(screen.getByTestId("simulate-drop"));
+      expect(screen.getByTestId("custom-move-panel")).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+
+      // Back at the game position, the branch is no longer active…
+      expect(screen.getByTestId("chessboard").getAttribute("data-position")).toContain(
+        "8/8/8/8/PPPPPPPP"
+      );
+      expect(screen.queryByTestId("custom-move-panel")).toBeNull();
+      // …but stays attached to the position so it can be re-entered.
+      const branchMoves = screen.getAllByTestId("branch-move");
+      expect(branchMoves).toHaveLength(1);
+      expect(branchMoves[0].getAttribute("aria-current")).toBeNull();
+
+      fireEvent.click(branchMoves[0]);
+
+      // Re-entering reuses the cached variation without another drop.
+      expect(screen.getByTestId("chessboard").getAttribute("data-position")).toContain("4P3");
+      expect(screen.getByTestId("custom-move-panel")).toBeInTheDocument();
+      expect(screen.getAllByTestId("branch-move")[0].getAttribute("aria-current")).toBe("true");
+    });
+
+    it("multi-move variations pop one move at a time via Previous", () => {
+      setupAnalyzedGame();
+      fireEvent.click(screen.getByTestId("simulate-drop"));
+      fireEvent.click(screen.getByTestId("simulate-second-drop"));
+      expect(screen.getAllByTestId("branch-move")).toHaveLength(2);
+
+      fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+      let branchMoves = screen.getAllByTestId("branch-move");
+      expect(branchMoves).toHaveLength(2);
+      expect(branchMoves[0].getAttribute("aria-current")).toBe("true");
+      expect(branchMoves[1].getAttribute("aria-current")).toBeNull();
+
+      fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+      branchMoves = screen.getAllByTestId("branch-move");
+      expect(branchMoves[0].getAttribute("aria-current")).toBeNull();
+      expect(screen.queryByTestId("custom-move-panel")).toBeNull();
+      expect(screen.getByTestId("chessboard").getAttribute("data-position")).not.toContain("4P3/5N2");
+    });
+
+    it("navigating the game timeline hides the active branch but keeps it cached", () => {
+      setupAnalyzedGame();
+      fireEvent.click(screen.getByTestId("simulate-drop"));
+      fireEvent.click(screen.getByRole("button", { name: "End" }));
+
+      expect(screen.queryByTestId("custom-move-panel")).toBeNull();
+
+      fireEvent.click(screen.getByRole("button", { name: "Start" }));
+      const branchMoves = screen.getAllByTestId("branch-move");
+      expect(branchMoves).toHaveLength(1);
+      expect(branchMoves[0].getAttribute("aria-current")).toBeNull();
+    });
+  });
+
     it("highlights the current move's from and to squares", () => {
       const timeline = timelineOf(SHORT_GAME);
       mockAnalysisState.status = "completed";

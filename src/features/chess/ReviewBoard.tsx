@@ -35,6 +35,15 @@ import { lookupOpening } from "./opening-book";
 import { OpeningDisplay } from "./opening-display";
 import { ClassificationIcon } from "./classification-icon";
 import { squareToPosition } from "./board-badge";
+import {
+  branchMoveSan,
+  classifyCustomMove,
+  formatGraphPointScore,
+  type CustomMoveVerdict,
+} from "./custom-variation";
+import { CustomMovePanel } from "./custom-move-panel";
+import { cachedAnalysisToGraphPoint } from "./position-evaluation";
+import { explorerDepth } from "./explorer-position-stack";
 
 const FULL_GAME_ANALYSIS_LIMIT: EngineAnalysisLimit = { kind: "depth", value: 10 };
 const DEEP_PASS_LIMIT: EngineAnalysisLimit = { kind: "depth", value: 18 };
@@ -96,6 +105,8 @@ export default function ReviewBoard({
   const [ply, setPly] = useState(0);
   const [orientation, setOrientation] = useState<"white" | "black">("white");
   const [explorer, setExplorer] = useState<ExplorerStack | null>(null);
+  const [variations, setVariations] = useState<Record<number, ExplorerStack>>({});
+  const [customVerdicts, setCustomVerdicts] = useState<Record<string, CustomMoveVerdict>>({});
   const [criticalSelection, setCriticalSelection] = useState<readonly CriticalPosition[] | null>(null);
   const [lastIdentity, setLastIdentity] = useState(() =>
     timelineIdentity(timeline)
@@ -105,6 +116,9 @@ export default function ReviewBoard({
     setLastIdentity(identity);
     setPly(0);
     setCriticalSelection(null);
+    setExplorer(null);
+    setVariations({});
+    setCustomVerdicts({});
   }
   const analysisState = useQuickPassAnalysis();
 
@@ -182,9 +196,63 @@ export default function ReviewBoard({
   });
   const currentMove = result.ok ? result.step.move : null;
 
-  // The board shows exactly one classification badge: the current move's
-  // verdict, or Book when the current ply is an unclassified book move.
+  const branchDepth = explorer !== null ? explorerDepth(explorer) : 0;
+  const lastBranchMove =
+    explorer !== null && branchDepth > 0
+      ? explorer.visited[branchDepth - 1]
+      : null;
+
+  // Persist the verdict for each analyzed custom move so re-entering a
+  // variation reuses the classification without recalculating it.
+  // Classify the current custom move against the branch position's best
+  // evaluation (from the original analysis) and the original continuation.
+  // Verdicts are cached by position (render-phase state adjustment, same
+  // pattern as criticalSelection) so re-entering a variation reuses them.
+  let branchVerdict: CustomMoveVerdict | null = null;
+  if (lastBranchMove !== null && positionAnalysis.point !== null) {
+    const cached = customVerdicts[lastBranchMove.fen];
+    if (cached !== undefined) {
+      branchVerdict = cached;
+    } else {
+      const bestAtBranchPoint = cachedAnalysisToGraphPoint(
+        analysisCache.get(explorer?.rootFen ?? "") ?? null,
+        0
+      );
+      const originalStep = timeline.steps[(explorer?.ply ?? 0) + branchDepth];
+      const originalAfter = originalStep
+        ? cachedAnalysisToGraphPoint(analysisCache.get(originalStep.fen) ?? null, 0)
+        : null;
+      const computed = classifyCustomMove({
+        bestAtBranchPoint,
+        customAfter: positionAnalysis.point,
+        originalAfter,
+      });
+      if (computed !== null) {
+        branchVerdict = computed;
+        setCustomVerdicts((prev) =>
+          prev[lastBranchMove.fen] === computed
+            ? prev
+            : { ...prev, [lastBranchMove.fen]: computed }
+        );
+      }
+    }
+  }
+
+  // The board shows exactly one classification badge for the active path:
+  // inside a variation it is the current custom move's verdict; on the game
+  // timeline it is the game move's verdict (or Book for unclassified book moves).
   const currentBadge = useMemo(() => {
+    if (lastBranchMove !== null) {
+      if (branchVerdict === null || lastBranchMove.to === undefined) {
+        return null;
+      }
+      const position = squareToPosition(lastBranchMove.to, orientation);
+      return {
+        left: position.left,
+        top: position.top,
+        classification: branchVerdict.classification,
+      };
+    }
     if (ply < 1) {
       return null;
     }
@@ -202,9 +270,15 @@ export default function ReviewBoard({
       top: position.top,
       classification: classification ?? ("book" as const),
     };
-  }, [classifications, bookPlies, timeline, ply, orientation]);
+  }, [lastBranchMove, branchVerdict, classifications, bookPlies, timeline, ply, orientation]);
 
   const highlightSquares = useMemo(() => {
+    if (lastBranchMove !== null && lastBranchMove.from !== undefined && lastBranchMove.to !== undefined) {
+      return [lastBranchMove.from, lastBranchMove.to].map((square) => ({
+        square,
+        ...squareToPosition(square, orientation),
+      }));
+    }
     if (explorer !== null || currentMove === null) {
       return [];
     }
@@ -212,7 +286,63 @@ export default function ReviewBoard({
       square,
       ...squareToPosition(square, orientation),
     }));
-  }, [explorer, currentMove, orientation]);
+  }, [lastBranchMove, explorer, currentMove, orientation]);
+
+  // Branch view-model for the move strip and the custom-move panel.
+  const branchForStrip = useMemo(() => {
+    // Prefer the full cached branch so stepping back inside a variation keeps
+    // the whole branch visible with only the active depth changing.
+    const parentPly = explorer !== null ? explorer.ply : ply;
+    const stack = variations[parentPly] ?? explorer;
+    if (stack === null) {
+      return null;
+    }
+    const labels = stack.visited.map((visited, index) =>
+      branchMoveSan(parentPly, index + 1, visited.san)
+    );
+    const classificationsList = stack.visited.map(
+      (visited) => customVerdicts[visited.fen]?.classification ?? null
+    );
+    return {
+      parentPly,
+      labels,
+      classifications: classificationsList,
+      activeDepth: explorer !== null ? explorerDepth(explorer) : 0,
+    };
+  }, [explorer, variations, ply, customVerdicts]);
+
+  const handleSelectBranchMove = useCallback(
+    (depth: number) => {
+      const parentPly = explorer !== null ? explorer.ply : ply;
+      const stack = variations[parentPly] ?? explorer;
+      if (stack === null) {
+        return;
+      }
+      setPly(stack.ply);
+      setExplorer({ ...stack, visited: stack.visited.slice(0, depth) });
+    },
+    [explorer, variations, ply]
+  );
+
+  const customPanelOriginal = useMemo(() => {
+    if (explorer === null || branchDepth === 0) {
+      return null;
+    }
+    const originalStep = timeline.steps[explorer.ply + branchDepth];
+    if (originalStep?.move === undefined || originalStep.move === null) {
+      return null;
+    }
+    const originalPoint = cachedAnalysisToGraphPoint(
+      analysisCache.get(originalStep.fen) ?? null,
+      0
+    );
+    return {
+      label: branchMoveSan(explorer.ply, branchDepth, originalStep.move.san),
+      san: originalStep.move.san,
+      classification: classifications.get(explorer.ply + branchDepth) ?? null,
+      score: formatGraphPointScore(originalPoint),
+    };
+  }, [explorer, branchDepth, timeline, analysisCache, classifications]);
 
   const movesPlayed = useMemo(() => {
     const list: string[] = [];
@@ -229,6 +359,9 @@ export default function ReviewBoard({
   const opening = useMemo(() => lookupOpening(movesPlayed), [movesPlayed]);
 
   const { atStart, atEnd } = isDisabled(ply, timeline.totalPlies);
+  // Inside a variation Previous steps back through the branch, so it stays
+  // enabled even at the branch's parent position.
+  const previousDisabled = atStart && explorer === null;
 
   const handlePieceDrop = useCallback(
     (args: PieceDropHandlerArgs) => {
@@ -245,18 +378,15 @@ export default function ReviewBoard({
       if (!result.ok) {
         return false;
       }
-      if (explorer === null) {
-        setExplorer(
-          pushExplorerPosition(createExplorerStack({ ply, fen }), {
-            fen: result.fen,
-            san: result.san,
-          })
-        );
-      } else {
-        setExplorer(
-          pushExplorerPosition(explorer, { fen: result.fen, san: result.san })
-        );
-      }
+      // A custom move creates (or continues) a temporary variation branch;
+      // the uploaded game timeline itself is never modified.
+      const branchParentPly = explorer !== null ? explorer.ply : ply;
+      const nextStack = pushExplorerPosition(
+        explorer ?? createExplorerStack({ ply, fen }),
+        { fen: result.fen, san: result.san, from: sourceSquare, to: targetSquare }
+      );
+      setExplorer(nextStack);
+      setVariations((prev) => ({ ...prev, [branchParentPly]: nextStack }));
       return true;
     },
     [explorer, fen, ply]
@@ -266,12 +396,26 @@ export default function ReviewBoard({
     const step = getTimelineStep(timeline, next);
     if (step.ok) {
       setPly(next);
+      // Leaving the game timeline hides the active branch but keeps its data
+      // cached so the user can re-enter it from the same position.
       setExplorer(null);
     }
   };
 
   const handleStart = () => goTo(0);
-  const handlePrevious = () => goTo(ply - 1);
+  const handlePrevious = () => {
+    // Inside a variation, Previous steps back through the branch and only
+    // then returns to the game position the branch started from.
+    if (explorer !== null) {
+      if (explorerDepth(explorer) <= 1) {
+        setExplorer(null);
+        return;
+      }
+      setExplorer(popExplorerPosition(explorer));
+      return;
+    }
+    goTo(ply - 1);
+  };
   const handleNext = () => goTo(ply + 1);
   const handleEnd = () => goTo(timeline.totalPlies);
   const handleFlip = () =>
@@ -290,7 +434,7 @@ export default function ReviewBoard({
     switch (event.key) {
       case "ArrowLeft":
         event.preventDefault();
-        goTo(ply - 1);
+        handlePrevious();
         break;
       case "ArrowRight":
         event.preventDefault();
@@ -307,12 +451,15 @@ export default function ReviewBoard({
     }
   };
 
-  const statusText =
-    ply === 0
-      ? "Start position"
-      : currentMove
-        ? currentMove.san
-        : "Position";
+  const statusText = (() => {
+    if (lastBranchMove !== null) {
+      return `${lastBranchMove.san} (+${branchDepth})`;
+    }
+    if (ply === 0) {
+      return "Start position";
+    }
+    return currentMove ? currentMove.san : "Position";
+  })();
 
   return (
     <div className="review-layout">
@@ -326,9 +473,7 @@ export default function ReviewBoard({
           className="flex items-center justify-between text-sm font-medium text-black dark:text-zinc-50"
         >
           <div>
-            <span data-testid="review-ply-status">
-              {ply === 0 ? "Start position" : statusText}
-            </span>{" "}
+            <span data-testid="review-ply-status">{statusText}</span>{" "}
             <span data-testid="review-ply-count">
               ({ply} / {timeline.totalPlies})
             </span>
@@ -336,7 +481,23 @@ export default function ReviewBoard({
           <OpeningDisplay opening={opening} />
         </div>
 
-        <MoveList timeline={timeline} currentPly={ply} onSelectPly={goTo} classifications={classifications} />
+        <MoveList
+          timeline={timeline}
+          currentPly={ply}
+          onSelectPly={goTo}
+          classifications={classifications}
+          branch={
+            branchForStrip === null
+              ? null
+              : {
+                  parentPly: branchForStrip.parentPly,
+                  labels: branchForStrip.labels,
+                  classifications: branchForStrip.classifications,
+                  activeDepth: branchForStrip.activeDepth,
+                  onSelectBranchMove: handleSelectBranchMove,
+                }
+          }
+        />
 
         <div
           role="group"
@@ -354,7 +515,7 @@ export default function ReviewBoard({
           <button
             type="button"
             onClick={handlePrevious}
-            disabled={atStart}
+            disabled={previousDisabled}
             className="rounded-md border border-black/[.12] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[.2] dark:text-zinc-50 dark:hover:bg-white/[.08]"
           >
             Previous
@@ -494,6 +655,15 @@ export default function ReviewBoard({
           }
           onReset={() => setExplorer(null)}
         />
+        {explorer !== null && branchDepth > 0 && lastBranchMove !== null && (
+          <CustomMovePanel
+            label={`+${branchMoveSan(explorer.ply, branchDepth, lastBranchMove.san)}`}
+            verdict={branchVerdict}
+            customPoint={positionAnalysis.point}
+            isAnalyzing={positionAnalysis.isAnalyzing}
+            original={customPanelOriginal}
+          />
+        )}
       </div>
 
       <aside

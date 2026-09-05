@@ -1,6 +1,8 @@
 export type VisitedPosition = {
   readonly fen: string;
   readonly san: string;
+  readonly from?: string;
+  readonly to?: string;
 };
 
 export type ExplorerStack = {
@@ -15,9 +17,12 @@ export const createExplorerStack = ({ ply, fen }: { ply: number; fen: string }):
   visited: [],
 });
 
-export const pushExplorerPosition = (stack: ExplorerStack, { fen, san }: { fen: string; san: string }): ExplorerStack => ({
+export const pushExplorerPosition = (
+  stack: ExplorerStack,
+  { fen, san, from, to }: { fen: string; san: string; from?: string; to?: string }
+): ExplorerStack => ({
   ...stack,
-  visited: [...stack.visited, { fen, san }],
+  visited: [...stack.visited, { fen, san, from, to }],
 });
 
 export const popExplorerPosition = (stack: ExplorerStack): ExplorerStack => ({

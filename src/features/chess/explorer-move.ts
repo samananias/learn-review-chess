@@ -1,7 +1,7 @@
 import { Chess } from "chess.js";
 
 export type ExplorerMoveResult =
-  | { readonly ok: true; readonly fen: string; readonly san: string }
+  | { readonly ok: true; readonly fen: string; readonly san: string; readonly from: string; readonly to: string }
   | { readonly ok: false; readonly reason: "illegal" | "invalid-fen" };
 
 export function applyExplorerMove(
@@ -18,7 +18,7 @@ export function applyExplorerMove(
   try {
     const result = chess.move({ from: move.from, to: move.to, promotion: move.promotion });
     if (result) {
-      return { ok: true, fen: chess.fen(), san: result.san };
+      return { ok: true, fen: chess.fen(), san: result.san, from: move.from, to: move.to };
     }
     return { ok: false, reason: "illegal" };
   } catch {
