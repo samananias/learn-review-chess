@@ -1399,7 +1399,7 @@ describe("ReviewBoard", () => {
       mockAnalysisState.results = [];
     });
 
-    it("renders a badge on each classified move's destination square", () => {
+    it("renders exactly one badge: the currently selected move's classification", () => {
       const timeline = timelineOf(SHORT_GAME);
       mockAnalysisState.status = "completed";
       mockAnalysisState.results = [
@@ -1412,20 +1412,37 @@ describe("ReviewBoard", () => {
 
       render(<ReviewBoard timeline={timeline} />);
 
-      const badges = screen.getAllByTestId("board-classification-cell");
-      expect(badges).toHaveLength(4);
-      expect(badges[0].getAttribute("data-ply")).toBe("1");
+      // At the start position no move is selected, so no badge exists.
+      expect(screen.queryByTestId("board-classification-cell")).toBeNull();
+
+      // 1. e4 is classified "best"; its badge sits on e4 (file e, rank 4).
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      const bestBadge = screen.getByTestId("board-classification-cell");
+      expect(bestBadge.getAttribute("data-ply")).toBe("1");
       expect(
-        within(badges[0]).getByTestId("board-classification-badge").getAttribute("data-classification")
+        within(bestBadge).getByTestId("board-classification-badge").getAttribute("data-classification")
       ).toBe("best");
-      // 1. e4 lands on e4: file e starts at the 4th column edge, rank 4 the 4th row edge.
-      expect(badges[0].style.left).toBe("50%");
-      expect(badges[0].style.top).toBe("50%");
+      expect(bestBadge.style.left).toBe("50%");
+      expect(bestBadge.style.top).toBe("50%");
+
+      // Navigating on replaces the badge with the new move's verdict.
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      const badges = screen.getAllByTestId("board-classification-cell");
+      expect(badges).toHaveLength(1);
+      expect(badges[0].getAttribute("data-ply")).toBe("2");
+
+      fireEvent.click(screen.getByRole("button", { name: "End" }));
+      const lastBadges = screen.getAllByTestId("board-classification-cell");
+      expect(lastBadges).toHaveLength(1);
+      expect(lastBadges[0].getAttribute("data-ply")).toBe("4");
+
+      fireEvent.click(screen.getByRole("button", { name: "Start" }));
+      expect(screen.queryByTestId("board-classification-cell")).toBeNull();
     });
 
-    it("renders book badges for unclassified plies inside the opening-book line", () => {
+    it("shows the book badge when the current ply is an unclassified book move", () => {
       // 1. e4 is book; 1...a6 leaves it. With no ply-0 result, 1. e4 cannot be
-      // assessed (delta missing) so it stays unclassified — and book.
+      // assessed (delta missing) so it stays unclassified - and book.
       const timeline = timelineOf('[Event "T"]\n[White "A"]\n[Black "B"]\n1. e4 a6 *');
       mockAnalysisState.status = "completed";
       mockAnalysisState.results = [
@@ -1434,25 +1451,28 @@ describe("ReviewBoard", () => {
       ];
 
       render(<ReviewBoard timeline={timeline} />);
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
 
-      const badges = screen.getAllByTestId("board-classification-cell");
-      expect(badges).toHaveLength(2);
-      // Ply 1 stayed unclassified inside the book line; ply 2 carries a verdict.
-      expect(badges[0].getAttribute("data-ply")).toBe("1");
+      const cell = screen.getByTestId("board-classification-cell");
+      expect(cell.getAttribute("data-ply")).toBe("1");
       expect(
-        within(badges[0]).getByTestId("board-classification-badge").getAttribute("data-classification")
+        within(cell).getByTestId("board-classification-badge").getAttribute("data-classification")
       ).toBe("book");
+      expect(cell.style.left).toBe("50%");
+      expect(cell.style.top).toBe("50%");
+
+      // Stepping to 1...a6 replaces the book badge with the move's verdict.
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      const cell2 = screen.getByTestId("board-classification-cell");
+      expect(cell2.getAttribute("data-ply")).toBe("2");
       expect(
-        within(badges[1]).getByTestId("board-classification-badge").getAttribute("data-classification")
+        within(cell2).getByTestId("board-classification-badge").getAttribute("data-classification")
       ).not.toBe("book");
-      // Ply 1's badge sits on e4 (file e); ply 2's on a6 (file a, rank 6).
-      expect(badges[0].style.left).toBe("50%");
-      expect(badges[0].style.top).toBe("50%");
-      expect(badges[1].style.left).toBe("0%");
-      expect(badges[1].style.top).toBe("25%");
+      expect(cell2.style.left).toBe("0%");
+      expect(cell2.style.top).toBe("25%");
     });
 
-    it("repositions badges when the board is flipped", () => {
+    it("repositions the badge when the board is flipped", () => {
       const timeline = timelineOf(SHORT_GAME);
       mockAnalysisState.status = "completed";
       mockAnalysisState.results = [
@@ -1464,12 +1484,40 @@ describe("ReviewBoard", () => {
       ];
 
       render(<ReviewBoard timeline={timeline} />);
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
       fireEvent.click(screen.getByRole("button", { name: "Flip board" }));
 
-      const badges = screen.getAllByTestId("board-classification-cell");
+      const cell = screen.getByTestId("board-classification-cell");
       // e4 from Black's side: file e starts at the 3rd column edge, rank 4 the 3rd row edge.
-      expect(badges[0].style.left).toBe("37.5%");
-      expect(badges[0].style.top).toBe("37.5%");
+      expect(cell.style.left).toBe("37.5%");
+      expect(cell.style.top).toBe("37.5%");
+    });
+
+    it("highlights the current move's from and to squares", () => {
+      const timeline = timelineOf(SHORT_GAME);
+      mockAnalysisState.status = "completed";
+      mockAnalysisState.results = [
+        badgeResult(timeline, 0, { type: "cp", value: 100, perspective: "white" }),
+        badgeResult(timeline, 1, { type: "cp", value: 100, perspective: "white" }),
+        badgeResult(timeline, 2, { type: "cp", value: 150, perspective: "white" }),
+        badgeResult(timeline, 3, { type: "cp", value: 130, perspective: "white" }),
+        badgeResult(timeline, 4, { type: "cp", value: 130, perspective: "white" }),
+      ];
+
+      render(<ReviewBoard timeline={timeline} />);
+
+      // No move selected at the start position.
+      expect(screen.queryByTestId("current-move-highlight")).toBeNull();
+
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      const highlights = screen.getAllByTestId("current-move-highlight");
+      expect(highlights).toHaveLength(2);
+      // 1. e4: from e2 (file e, rank 2) and to e4 (file e, rank 4).
+      const squares = highlights.map((h) => h.getAttribute("data-square")).sort();
+      expect(squares).toEqual(["e2", "e4"]);
+
+      fireEvent.click(screen.getByRole("button", { name: "Start" }));
+      expect(screen.queryByTestId("current-move-highlight")).toBeNull();
     });
   });
 });

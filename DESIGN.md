@@ -268,7 +268,7 @@ Rectangular with quiet corners. `rounded-md` (6px) is the working radius for eve
 
 ### Move Classification Badges (signature)
 
-The verdict system, matched to the reference icon set: a filled circle in the verdict color carrying a white glyph (`!!`, `!`, star, thumbs-up, check, minus, `?!`, `?`, `??`, open book) with a soft dark echo under the glyph for depth. Badges appear in the move strip, the performance summary, and — after analysis — directly on the board at each classified move's destination square, with Book badges for opening-book plies. Color encodes the verdict tier; the glyph guarantees the information survives color-blindness and monochrome rendering.
+The verdict system, matched to the reference icon set: a filled circle in the verdict color carrying a white glyph (`!!`, `!`, star, thumbs-up, check, minus, `?!`, `?`, `??`, open book) with a soft dark echo under the glyph for depth. Badges appear in the move strip and the performance summary. On the board, exactly one badge is ever shown — the current move's verdict (or Book for an unclassified book move) — pinned inside the destination square's top-right corner at 42% of the square with 4% padding, so it never clips at the board edge and never covers the piece. The current move's from/to squares carry a soft white highlight (30% white wash) so the reviewed move reads at a glance. Color encodes the verdict tier; the glyph guarantees the information survives color-blindness and monochrome rendering.
 
 ### Evaluation Graph (signature)
 

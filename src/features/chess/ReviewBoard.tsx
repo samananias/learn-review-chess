@@ -33,7 +33,7 @@ import { buildMoveExplanations } from "./move-explanation";
 import { MoveExplanationPanel } from "./move-explanation-panel";
 import { lookupOpening } from "./opening-book";
 import { OpeningDisplay } from "./opening-display";
-import { ClassificationIcon, type ClassificationIconName } from "./classification-icon";
+import { ClassificationIcon } from "./classification-icon";
 import { squareToPosition } from "./board-badge";
 
 const FULL_GAME_ANALYSIS_LIMIT: EngineAnalysisLimit = { kind: "depth", value: 10 };
@@ -141,26 +141,6 @@ export default function ReviewBoard({
     return plies;
   }, [timeline]);
 
-  const boardBadges = useMemo(() => {
-    const badges: {
-      readonly ply: number;
-      readonly square: string;
-      readonly classification: ClassificationIconName;
-    }[] = [];
-    for (let ply = 1; ply <= timeline.totalPlies; ply += 1) {
-      const square = timeline.steps[ply]?.move?.to;
-      if (square === undefined) {
-        continue;
-      }
-      const classification = classifications.get(ply);
-      if (classification !== undefined) {
-        badges.push({ ply, square, classification });
-      } else if (bookPlies.has(ply)) {
-        badges.push({ ply, square, classification: "book" });
-      }
-    }
-    return badges;
-  }, [classifications, bookPlies, timeline]);
 
   if (analysisState.status === "completed" && criticalSelection === null) {
     setCriticalSelection(selectCriticalPositions(classifiedMoves));
@@ -201,6 +181,38 @@ export default function ReviewBoard({
     ply,
   });
   const currentMove = result.ok ? result.step.move : null;
+
+  // The board shows exactly one classification badge: the current move's
+  // verdict, or Book when the current ply is an unclassified book move.
+  const currentBadge = useMemo(() => {
+    if (ply < 1) {
+      return null;
+    }
+    const square = timeline.steps[ply]?.move?.to;
+    if (square === undefined) {
+      return null;
+    }
+    const classification = classifications.get(ply);
+    if (classification === undefined && !bookPlies.has(ply)) {
+      return null;
+    }
+    const position = squareToPosition(square, orientation);
+    return {
+      left: position.left,
+      top: position.top,
+      classification: classification ?? ("book" as const),
+    };
+  }, [classifications, bookPlies, timeline, ply, orientation]);
+
+  const highlightSquares = useMemo(() => {
+    if (explorer !== null || currentMove === null) {
+      return [];
+    }
+    return [currentMove.from, currentMove.to].map((square) => ({
+      square,
+      ...squareToPosition(square, orientation),
+    }));
+  }, [explorer, currentMove, orientation]);
 
   const movesPlayed = useMemo(() => {
     const list: string[] = [];
@@ -392,37 +404,43 @@ export default function ReviewBoard({
                 }}
               />
             </section>
-            {boardBadges.length > 0 && (
+            {(currentBadge !== null || highlightSquares.length > 0) && (
               <div
-                data-testid="board-classifications"
+                data-testid="board-overlays"
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0"
               >
-                {boardBadges.map(({ ply, square, classification }) => {
-                  const position = squareToPosition(square, orientation);
-                  return (
-                    <span
-                      key={ply}
-                      data-testid="board-classification-cell"
-                      data-ply={ply}
-                      className="absolute block h-[12.5%] w-[12.5%]"
-                      style={{
-                        left: `${position.left}%`,
-                        top: `${position.top}%`,
-                      }}
-                    >
+                {highlightSquares.length > 0 && (
+                  <div data-testid="current-move-highlights">
+                    {highlightSquares.map(({ square, left, top }) => (
                       <span
-                        data-testid="board-classification-badge"
-                        data-ply={ply}
-                        data-classification={classification}
-                        className="absolute block h-[44%] w-[44%]"
-                        style={{ right: "3%", top: "3%" }}
-                      >
-                        <ClassificationIcon classification={classification} className="h-full w-full" />
-                      </span>
+                        key={square}
+                        data-testid="current-move-highlight"
+                        data-square={square}
+                        className="absolute block h-[12.5%] w-[12.5%] bg-white/30"
+                        style={{ left: `${left}%`, top: `${top}%` }}
+                      />
+                    ))}
+                  </div>
+                )}
+                {currentBadge !== null && (
+                  <span
+                    data-testid="board-classification-cell"
+                    data-ply={ply}
+                    className="absolute block h-[12.5%] w-[12.5%]"
+                    style={{ left: `${currentBadge.left}%`, top: `${currentBadge.top}%` }}
+                  >
+                    <span
+                      data-testid="board-classification-badge"
+                      data-ply={ply}
+                      data-classification={currentBadge.classification}
+                      className="absolute block h-[42%] w-[42%] drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]"
+                      style={{ right: "4%", top: "4%" }}
+                    >
+                      <ClassificationIcon classification={currentBadge.classification} className="h-full w-full" />
                     </span>
-                  );
-                })}
+                  </span>
+                )}
               </div>
             )}
           </div>
